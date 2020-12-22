@@ -19,7 +19,12 @@ class Linda{
     int procesosEsperando=0;
     int lecturasRealizadas=0;
     int escriturasRealizadas=0;
+    
+    
+    bool matchMultiple(const Tupla& p1 ,const Tupla& p2,const Tupla& t1,const Tupla& t2)const;
 
+    bool esVariable(const string s)const;
+    
     public:
 
     Linda ();
