@@ -47,19 +47,19 @@ public:
 	//Pre:  "s" tiene el formato adecuado para una tupla: "[val1,val2,..]"
 	//      correspondiente al tamaño de "this"
 	//Post: "data" tomará el valor adecuado a partir de "s"
-	void from_string(string s);
+	void from_string(const string s);
 
 	//Pre:  0<="pos"<this->size()
 	//Post: devuelve el elemento en la posición "pos" de la tupla
-	string get(int pos)const;
+	string get(const int pos)const;
 
 	//Pre:  0<="pos"<this->size()
 	//Post: pone "value" en la posición "pos" de la tupla	
-	void set(int pos, string value);
+	void set(const int pos, const string value);
 
 	//Pre:  "p" es un patrón
 	//Post: ¿Se emparejan "this" y "p"?
-	bool match(Tupla p)const;
+	bool match(const Tupla p)const;
 	
 	
 private:
@@ -69,6 +69,6 @@ private:
     //momento en el que conocerá el tamaño. No olvidar liberar la memoria en 
     //el destructor
 	vector<string> *data;
-	bool esPatron(string s)const;
+	bool esPatron(const string s)const;
 };
 #endif
