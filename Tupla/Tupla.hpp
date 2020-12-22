@@ -29,7 +29,7 @@ public:
 	Tupla(string s1, string s2, string s3, string s4, string s5);
 	Tupla(string s1, string s2, string s3, string s4, string s5, string s6);
 	//Creo una tupla a partir de otra. Se trata de un duplicado
-	Tupla(Tupla& t);
+	Tupla(const Tupla& t);
 	
 	//destructor -----------------------------
 	~Tupla();
