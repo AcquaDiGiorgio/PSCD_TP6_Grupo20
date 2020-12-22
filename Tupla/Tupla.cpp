@@ -130,15 +130,28 @@ void Tupla::from_string(const string s) {
 
 
 bool Tupla::match(const Tupla p) const{
-    
+    map<char,string> variables;//en este map se almacenan un string asociado al nombre de una variable
+    //Todas las variables con el mismo nombre tienen que tener el mismo string asociado o no hace match
     for(int i=0;i<p.size();i++){
         string valor=p.get(i);
-        if (!esPatron(valor) && valor!=data->at(i)){
-            return false;
+        if(esPatron(valor)){
+            //si es la primera vez que aparece el nombre de una variable, la añadimos al map
+            if(variables.count(valor[1])==0){
+                variables[valor[1]]=data->at(i);
+            }else{
+                //si ya a aparecido anteriormente, pero con otro string asociado, no hacen match
+                if(variables[valor[1]]!=data->at(i)){
+                   
+                    return false;
+                }
+            }
+        }else if(valor!=data->at(i)) {//si no es una variable y los valores no coinciden
+            return false;//no hacen match
         }
     }
     return true;
 }
+
 
 //Función auxiliar añadida
 
