@@ -71,11 +71,11 @@ Tupla::~Tupla() {
     delete data;
 }
 
-int Tupla::size() {
+int Tupla::size()const{
     return data->size();
 }
 
-string Tupla::to_string() {
+string Tupla::to_string() const{
     string res = "[";
     for (int i=0; i<data->size()-1; i++) {
         res = res + data->at(i) + ",";
@@ -84,7 +84,7 @@ string Tupla::to_string() {
     return res;
 }
 
-string Tupla::get(int pos) {
+string Tupla::get(int pos) const{
     return data->at(pos);
 }
 
@@ -111,24 +111,36 @@ void Tupla::from_string(string s) {
     }
 }
 
-bool Tupla::match(Tupla p) {
-    //To be done
-    bool hacenMatch = true;
-    if(p.size() == this -> size()){
-    	for(int i = 0; i < p.size() && hacenMatch; i++){
-    		if(!esPatron(p.get(i))){
-    			hacenMatch = p.get(i) == this -> get(i);
-    		}
-    	}
-    	return hacenMatch;
+/*
+void Tupla::from_string(string s) {
+    assert(s.length()>2 && s[0]=='[' && s[s.size()-1]==']');
+    data=new vector<string>;
+    char* msg= new char[s.length()];
+    s.pop_back();
+    strcpy(msg,&(s.c_str()[1]));//msg es el sting sin los corchetes [ ]
+    char * pch = strtok (msg,",");
+    for (int i=0;i>=6||pch!=nullptr;i++){//dividimos el sting por comas
+        data->push_back(pch);//y vamos agregando los valores
+        pch = strtok (NULL, ",");
     }
-    else{
-    	return false;
+    delete msg;
+
+}*/
+
+
+bool Tupla::match(Tupla p) const{
+    
+    for(int i=0;i<p.size();i++){
+        string valor=p.get(i);
+        if (!esPatron(valor) && valor!=data->at(i)){
+            return false;
+        }
     }
+    return true;
 }
 
 //Función auxiliar añadida
 
-bool Tupla::esPatron(string s){
+bool Tupla::esPatron(string s)const {
 	return s.length() == 2 && s[0] == '?' && s[1] >= 'A' && s[1] <= 'Z';
 }
