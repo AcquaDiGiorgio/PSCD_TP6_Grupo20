@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 #include <cassert>
-#include <Tupla.hpp>
+#include "Tupla.hpp"
 
 Tupla::Tupla(int n) {
     data = new vector<string>(n,"");
@@ -60,11 +60,12 @@ Tupla::Tupla(string s1, string s2, string s3, string s4, string s5, string s6) {
     data->at(5) = s6;
 }
 
-Tupla::Tupla(Tupla& t) {
+Tupla::Tupla(const Tupla& t){
     data = new vector<string>(t.size(), "");
     for(int i = 0; i < t.size(); i++){
     	data->at(i) = t.get(i);
     }
+
 }
 
 Tupla::~Tupla() {
@@ -84,15 +85,15 @@ string Tupla::to_string() const{
     return res;
 }
 
-string Tupla::get(int pos) const{
+string Tupla::get(const int pos) const{
     return data->at(pos);
 }
 
-void Tupla::set(int pos, string value) {
+void Tupla::set(const int pos,const string value) {
     data->at(pos) = value;
 }
 
-void Tupla::from_string(string s) {
+void Tupla::from_string(const string s) {
     assert(s.length()>2 && s[0]=='[' && s[s.size()-1]==']');
     string valores = "";
     int posicion = 0;
@@ -112,7 +113,7 @@ void Tupla::from_string(string s) {
 }
 
 /*
-void Tupla::from_string(string s) {
+void Tupla::from_string(const string s) {
     assert(s.length()>2 && s[0]=='[' && s[s.size()-1]==']');
     data=new vector<string>;
     char* msg= new char[s.length()];
@@ -128,7 +129,7 @@ void Tupla::from_string(string s) {
 }*/
 
 
-bool Tupla::match(Tupla p) const{
+bool Tupla::match(const Tupla p) const{
     
     for(int i=0;i<p.size();i++){
         string valor=p.get(i);
@@ -141,6 +142,7 @@ bool Tupla::match(Tupla p) const{
 
 //Función auxiliar añadida
 
-bool Tupla::esPatron(string s)const {
+bool Tupla::esPatron(const string s)const {
 	return s.length() == 2 && s[0] == '?' && s[1] >= 'A' && s[1] <= 'Z';
 }
+
