@@ -80,6 +80,48 @@ Tupla Linda::RdN(Tupla t) {
     return retVal;
 }
 
+//Compara que los patrones p1 y p2 encajen con las tuplas p1 y p2
+//IMPORTANTE: p1 y p2 tienen ser los patrones (los que contienen variables ?X) no t1 o t2
+//El algoritmo usado es similar al metodo match de la clase Tupla
+bool Linda::matchMultiple(const Tupla& p1 ,const Tupla& p2,const Tupla& t1,const Tupla& t2)const{
+    map<char,string> variables;//en este map se almacenan un string asociado al nombre de una variable
+    //Todas las variables con el mismo nombre tienen que tener el mismo string asociado o no hace match
+    for (int i=0; i<p1.size();i++){
+        string valor=p1.get(i);
+        if(esVariable(valor)){
+            //si es la primera vez que aparece el nombre de una variable, la añadimos al map
+            if(variables.count(valor[1])==0){
+                variables[valor[1]]=t1.get(i);
+            }else{
+                //si ya a aparecido anteriormente, pero con otro string asociado, no hacen match
+                if(variables[valor[1]]!=t1.get(i)){
+                    return false;
+                }
+            }
+        }else if(valor!=t1.get(i)) {//si no es una variable y los valores no coinciden
+            return false;//no hacen match
+        }
+    }
+    for (int i=0; i<p2.size();i++){
+        string valor=p2.get(i);
+        if(esVariable(valor)){
+            if(variables.count(valor[1])==0){
+                variables[valor[1]]=t2.get(i);
+            }else{
+                if(variables[valor[1]]!=t2.get(i)){
+                    return false;
+                }
+            }
+        }else if(valor!=t2.get(i)) {//si no es una variable y los valores no coinciden
+            return false;//no hacen match
+        }
+    }
+    return true;
 
+}
+
+bool Linda::esVariable(const string s)const {
+	return s.length() == 2 && s[0] == '?' && s[1] >= 'A' && s[1] <= 'Z';
+}
 
 
