@@ -10,14 +10,15 @@
 #include <string>
 #include <cstdlib>
 #include "Socket.hpp"
-// TODO: #include "PLACEHOLDER_MONITOR"
-// TODO: #include "Tupla.hpp"
+#include "PLACEHOLDER_MONITOR.hpp"
+#include "Tupla.hpp"
+#include "Gestor.hpp"
 
 using namespace std;
 
 const int N = 5;  // TODO: Clientes simultaneos y/o totales usando el servidor
 
-void servCliente (/* TODO: Socket &soc, int client_fd, Gestor &gestor */) {
+void servCliente (Socket &soc, int client_fd, Gestor &gestor) {
     int length = 100;
     string buffer = "";
 
@@ -58,10 +59,44 @@ void servCliente (/* TODO: Socket &soc, int client_fd, Gestor &gestor */) {
         }
         else {
             if (buffer == "PN") {
-                // TODO: Recibir parametro, realizar operacion y enviar resultado
-            }
+		// TODO: Recibir parametro, realizar operacion y enviar resultado
+		rcv_bytes = soc.Recv(client_fd,buffer,length);
+		if (rcv_bytes == -1) {  // TODO: Gestion de errores
+		    cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
+		    // Cerramos los sockets
+		    soc.Close(client_fd);
+		    exit(1);
+		}
+		Tupla t(4);
+		t.from_string(buffer);
+		gestor.PN(t);
+		int send_bytes = soc.Send(client_fd, "POST NOTE CORRECTO");
+	        if(send_bytes == -1) {  // TODO: Gestion de errores
+		     cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
+		     // Cerramos los sockets
+		     soc.Close(client_fd);
+		     exit(1);
+	       }
+	    }
             else if (buffer == "RN") {
                 // TODO: Recibir parametro, realizar operacion y enviar resultado
+		rcv_bytes = soc.Recv(client_fd,buffer,length);
+		if (rcv_bytes == -1) {  // TODO: Gestion de errores
+		    cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
+		    // Cerramos los sockets
+		    soc.Close(client_fd);
+		    exit(1);
+		}
+		Tupla t(4);
+		t.from_string(buffer);
+		gestor.RN(t);
+		int send_bytes = soc.Send(client_fd, t.to_string());
+	        if(send_bytes == -1) {  // TODO: Gestion de errores
+		     cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
+		     // Cerramos los sockets
+		     soc.Close(client_fd);
+		     exit(1);
+	       }
             }
             else if (buffer == "RdN") {
                 // TODO: Recibir parametro, realizar operacion y enviar resultado
@@ -82,11 +117,13 @@ int main (int argc, char *argv[]) {
     int SERVER_PORT = atoi(argv[1]);
     thread cliente[N];
     int client_fd[N];
-    // TODO: PLACEHOLDER_MONITOR monitor();
+    PLACEHOLDER_MONITOR monitor();
 
     // Creación del socket con el que se llevará a cabo
     // la comunicación con el servidor.
     Socket chan(SERVER_PORT);
+    
+    Gestor gestor(4);
 
     // Bind
     int socket_fd = chan.Bind();
@@ -115,7 +152,7 @@ int main (int argc, char *argv[]) {
             exit(1);
         }
 
-        // TODO: cliente[i] = thread(&servCliente, ref(chan), client_fd[i], ref(gestor));
+        cliente[i] = thread(&servCliente, ref(chan), client_fd[i], ref(gestor));
     }
 
     // ¿Qué pasa si algún thread acaba inesperadamente?
@@ -132,6 +169,6 @@ int main (int argc, char *argv[]) {
     // TODO: Fin del programa
     // Despedida
     cout << "Bye bye" << endl;
-
+    gestor.print();
     return error_code;
 }

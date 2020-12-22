@@ -1,0 +1,63 @@
+#*****************************************************************
+# File:   Makefile_TP6_serverLinda
+# Author: Jorge Rodrigo Pérez, ...
+# Date:   Diciembre de 2020
+# Coms:   Makefile para compilación del servidor Linda del tp6
+#         ....
+#         Es necesario descomentar la línea 28 para poder compilar en hendrix
+#*****************************************************************
+
+#---------------------------------------------------------
+CC=g++
+SERVER=serverLinda
+SOCKET_DIR=Socket
+SOCKET=${SOCKET_DIR}/Socket
+MONITOR_DIR=PLACEHOLDER_MONITOR
+MONITOR=${MONITOR_DIR}/PLACEHOLDER_MONITOR
+TUPLA_DIR=Tupla
+TUPLA=${TUPLA_DIR}/Tupla
+GESTOR_DIR=Gestor
+GESTOR=${GESTOR_DIR}/Gestor
+
+CPPFLAGS=-I. -I${SOCKET_DIR} -I${MONITOR_DIR} -I${TUPLA_DIR} -I${GESTOR_DIR} -O2 -std=c++11 -lsockets # Flags compilacion
+LDFLAGS=-pthread # Flags linkado threads
+
+all: ${CLIENT} ${SERVER}
+#----------------------------------------------------------------------------
+#Para gestionar opciones de compilación según la máquina: hendrix tiene sus manías
+#Descomentar la siguiente línea para compilar en hendrix
+#SOCKETSFLAGS=-lsocket -lnsl
+#-----------------------------------------------------------
+# SERVIDOR
+# Compilacion
+${SERVER}.o: ${SERVER}.cpp 
+	${CC} -c ${CPPFLAGS} ${SERVER}.cpp
+
+# Linkado
+${SERVER}: ${SOCKET}.o ${SERVER}.o ${MONITOR}.o ${TUPLA}.o ${GESTOR}.o
+	${CC} ${LDFLAGS} ${SOCKET}.o ${SERVER}.o ${MONITOR}.o ${TUPLA}.o ${GESTOR}.o -o ${SERVER} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
+# SOCKETS
+# Compilacion libreria de Sockets
+${SOCKET}.o: ${SOCKET}.hpp ${SOCKET}.cpp
+	${CC} -c ${CPPFLAGS} ${SOCKET}.cpp -o ${SOCKET}.o
+#-----------------------------------------------------------	
+# Compilacion libreria MonitorServ
+${MONITOR}.o: ${MONITOR}.hpp ${MONITOR}.cpp
+	${CC} -c ${CPPFLAGS} ${MONITOR}.cpp -o ${MONITOR}.o
+
+#-----------------------------------------------------------
+#Compilacion libreria Tupla
+${TUPLA}.o: ${TUPLA}.hpp ${TUPLA}.cpp
+	${CC} -c ${CPPFLAGS} ${TUPLA}.cpp -o ${TUPLA}.o
+
+#-----------------------------------------------------------
+#Compilacion libreria Gestor
+${GESTOR}.o: ${GESTOR}.hpp ${GESTOR}.cpp
+	${CC} -c ${CPPFLAGS} ${GESTOR}.cpp -o ${GESTOR}.o
+
+#-----------------------------------------------------------
+# LIMPIEZA
+clean:
+	$(RM) ${SOCKET}.o ${MONITOR}.o ${TUPLA}.o ${GESTOR}.o
+	$(RM) ${SERVER} ${SERVER}.o
