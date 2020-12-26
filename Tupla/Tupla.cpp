@@ -112,6 +112,15 @@ void Tupla::from_string(const string s) {
     }
 }
 
+//Función que permite copiar tuplas
+void Tupla::copyFrom(const Tupla& t){
+    data = new vector<string>(t.size(), "");
+    for(int i = 0; i < t.size(); i++){
+    	data->at(i) = t.get(i);
+    }
+}
+
+
 /*
 void Tupla::from_string(const string s) {
     assert(s.length()>2 && s[0]=='[' && s[s.size()-1]==']');
