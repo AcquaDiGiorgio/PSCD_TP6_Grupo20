@@ -10,15 +10,14 @@
 #include <string>
 #include <cstdlib>
 #include "Socket.hpp"
-#include "PLACEHOLDER_MONITOR.hpp"
 #include "Tupla.hpp"
-#include "Gestor.hpp"
+#include "monitorLinda.hpp"
 
 using namespace std;
 
 const int N = 5;  // TODO: Clientes simultaneos y/o totales usando el servidor
 
-void servCliente (Socket &soc, int client_fd, Gestor &gestor) {
+void servCliente (Socket &soc, int client_fd, Linda &monitor) {
     int length = 100;
     string buffer = "";
 
@@ -30,7 +29,7 @@ void servCliente (Socket &soc, int client_fd, Gestor &gestor) {
         exit(1);
     }
     if (buffer != "INICIO SESION") {  // TODO: Gestion de errores
-        cerr << "Petición incorrecta: recibido \"" + buffer +
+        cerr << "Peticion incorrecta: recibido \"" + buffer +
             "\" cuando se esperaba \"INICIO SESION\"\n";
         soc.Close(client_fd);
         exit(1);
@@ -57,53 +56,42 @@ void servCliente (Socket &soc, int client_fd, Gestor &gestor) {
             seguir = false;
             soc.Close(client_fd);
         }
+
         else {
-            if (buffer == "PN") {
-		// TODO: Recibir parametro, realizar operacion y enviar resultado
-		rcv_bytes = soc.Recv(client_fd,buffer,length);
-		if (rcv_bytes == -1) {  // TODO: Gestion de errores
-		    cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
-		    // Cerramos los sockets
-		    soc.Close(client_fd);
-		    exit(1);
-		}
-		Tupla t(4);
-		t.from_string(buffer);
-		gestor.PN(t);
-		int send_bytes = soc.Send(client_fd, "POST NOTE CORRECTO");
-	        if(send_bytes == -1) {  // TODO: Gestion de errores
-		     cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
-		     // Cerramos los sockets
-		     soc.Close(client_fd);
-		     exit(1);
-	       }
-	    }
-            else if (buffer == "RN") {
-                // TODO: Recibir parametro, realizar operacion y enviar resultado
-		rcv_bytes = soc.Recv(client_fd,buffer,length);
-		if (rcv_bytes == -1) {  // TODO: Gestion de errores
-		    cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
-		    // Cerramos los sockets
-		    soc.Close(client_fd);
-		    exit(1);
-		}
-		Tupla t(4);
-		t.from_string(buffer);
-		gestor.RN(t);
-		int send_bytes = soc.Send(client_fd, t.to_string());
-	        if(send_bytes == -1) {  // TODO: Gestion de errores
-		     cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
-		     // Cerramos los sockets
-		     soc.Close(client_fd);
-		     exit(1);
-	       }
+            // Separamos el mensaje y realizamos la operacion
+            // TODO: Gestion de errores
+            char* aux = new char[buffer.length()+1];
+            strcpy(aux, buffer.c_str());
+            string tok = strtok(aux, ":"), envio;
+            int size = atoi(strtok(NULL, ":"));
+            Tupla entrada(size);
+            entrada.from_string(strtok(NULL, ":"));
+
+            if (tok == "PN") {
+                monitor.PN(entrada);
+                envio = "POST NOTE CORRECTO";
             }
-            else if (buffer == "RdN") {
-                // TODO: Recibir parametro, realizar operacion y enviar resultado
+
+            else if (tok == "RN") {
+                Tupla salida = monitor.RN(entrada);
+                envio = salida.to_string();
             }
+
+            else if (tok == "RdN") {
+                Tupla salida = monitor.RdN(entrada);
+                envio = salida.to_string();
+            }
+
             else {  // TODO: Gestion de errores
-                cerr << "Petición incorrecta: recibido \"" + buffer +
+                cerr << "Peticion incorrecta: recibido \"" + buffer +
                     "\" cuando se esperaba \"PN\", \"RN\" o \"RdN\"\n";
+                soc.Close(client_fd);
+                exit(1);
+            }
+            int send_bytes = soc.Send(client_fd, envio);
+            if(send_bytes == -1) {  // TODO: Gestion de errores
+                cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
+                // Cerramos los sockets
                 soc.Close(client_fd);
                 exit(1);
             }
@@ -112,18 +100,21 @@ void servCliente (Socket &soc, int client_fd, Gestor &gestor) {
 }
 
 int main (int argc, char *argv[]) {
-    // TODO: Asegurar invocacion correcta
+    if (argc != 2)
+    {
+        printf("Número de parámetros incorrecto \n");
+        printf("Uso: %s @puerto_srv\n", argv[0]);
+        exit(1); // finaliza el programa indicando salida incorrecta (1)
+    }
 
     int SERVER_PORT = atoi(argv[1]);
     thread cliente[N];
     int client_fd[N];
-    PLACEHOLDER_MONITOR monitor();
+    Linda monitor;
 
     // Creación del socket con el que se llevará a cabo
     // la comunicación con el servidor.
     Socket chan(SERVER_PORT);
-    
-    Gestor gestor(4);
 
     // Bind
     int socket_fd = chan.Bind();
@@ -152,7 +143,7 @@ int main (int argc, char *argv[]) {
             exit(1);
         }
 
-        cliente[i] = thread(&servCliente, ref(chan), client_fd[i], ref(gestor));
+        cliente[i] = thread(&servCliente, ref(chan), client_fd[i], ref(monitor));
     }
 
     // ¿Qué pasa si algún thread acaba inesperadamente?
@@ -169,6 +160,5 @@ int main (int argc, char *argv[]) {
     // TODO: Fin del programa
     // Despedida
     cout << "Bye bye" << endl;
-    gestor.print();
     return error_code;
 }
