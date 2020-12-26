@@ -61,6 +61,10 @@ public:
 	//Post: ¿Se emparejan "this" y "p"?
 	bool match(const Tupla p)const;
 	
+	//Pre:  
+	//Post: this = t
+	void copyFrom(const Tupla& t);
+	
 	
 private:
 	//la tupla se almacenará como un vector de strings. Dado que antes
