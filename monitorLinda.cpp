@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <list>
+#include <map>
 #include "Tupla.hpp"
 #include "monitorLinda.hpp"
 
@@ -40,7 +41,7 @@ Tupla Linda::RN(Tupla t) {
             (!encontrado) && it != tuplas[sz].end(); ++it){
 
             if (it->match(t)){
-                retVal=*it;
+                retVal.copyFrom(*it);
                 encontrado=true;
                 tuplas[sz].erase(it);
             }
@@ -67,7 +68,7 @@ Tupla Linda::RdN(Tupla t) {
             (!encontrado) && it != tuplas[sz].end(); ++it){
 
             if (it->match(t)){
-                retVal=*it;
+                retVal.copyFrom(*it);
                 encontrado=true;
             }
         }
