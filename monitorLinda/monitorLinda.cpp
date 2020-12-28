@@ -31,7 +31,7 @@ void Linda::PN(Tupla t) {//añade la tupla a su lista correspondiente
 Tupla Linda::RN(Tupla t) {
     int sz=t.size();
     unique_lock<mutex> lck(mtx[sz]);
-    procesosEsperando++;
+    removesEnEpera++;
     Tupla retVal(sz);
     bool encontrado=false;
     //Mientras no ha encontrado una tupla que encaje
@@ -51,14 +51,15 @@ Tupla Linda::RN(Tupla t) {
             espera[sz].wait(lck);
         }
     }
-    procesosEsperando--;
+    removesEnEpera--;
+    removesRealizados++;
     return retVal;
 }
 
 Tupla Linda::RdN(Tupla t) {
     int sz=t.size();
     unique_lock<mutex> lck(mtx[sz]);
-    procesosEsperando++;
+    lecturasEnEspera++;
     bool encontrado=false;
     Tupla retVal(sz);
     //Mientras no ha encontrado una tupla que encaje
@@ -77,7 +78,8 @@ Tupla Linda::RdN(Tupla t) {
             espera[sz].wait(lck);
         }
     }
-    procesosEsperando--;
+    lecturasEnEspera--;
+    lecturasRealizadas++;
     return retVal;
 }
 
@@ -121,8 +123,45 @@ bool Linda::matchMultiple(const Tupla& p1 ,const Tupla& p2,const Tupla& t1,const
 
 }
 
+int Linda::NumeroDeTuplas()const{
+    int retVal=0;
+    for (int i=0;i<NSizeTuplas;i++){
+        retVal+=tuplas[i].size();
+    }
+    return retVal;
+}
+
+
 bool Linda::esVariable(const string s)const {
 	return s.length() == 2 && s[0] == '?' && s[1] >= 'A' && s[1] <= 'Z';
 }
 
+int Linda::LecturasEnEspera()const{
+    return lecturasEnEspera;
+}
 
+int Linda::RemovesEnEpera()const{
+    return removesEnEpera;
+}
+
+int Linda::LecturasRealizadas()const{
+    return lecturasRealizadas;
+}
+
+int Linda::RemovesRealizados()const{
+    return removesRealizados;
+}
+
+int Linda::EscriturasRealizadas()const{
+    return escriturasRealizadas;
+}
+
+void Linda::GeneralInfo(int& nTuplas,int& RdNEnEspera,int& RNenEpera,
+    int& RdNrealizadas,int& RNrealizados,int& PNrealizadas)const{
+        nTuplas=NumeroDeTuplas();
+        RdNEnEspera=lecturasEnEspera;
+        RNenEpera=removesEnEpera;
+        RdNrealizadas=lecturasRealizadas;
+        RNrealizados=removesRealizados;
+        PNrealizadas=escriturasRealizadas;
+    }
