@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 #include <vector> //estudiar la clase "vector" de C++
 
 using namespace std;
