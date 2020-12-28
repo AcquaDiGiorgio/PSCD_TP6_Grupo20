@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <cassert>
+#include <map>
 #include "Tupla.hpp"
 
 Tupla::Tupla(int n) {
