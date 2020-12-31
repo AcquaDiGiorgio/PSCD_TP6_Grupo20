@@ -10,6 +10,7 @@
 #---------------------------------------------------------
 CC=g++
 SERVER=serverLinda
+DESPLIEGUE=serverDespliegue
 SOCKET_DIR=Socket
 SOCKET=${SOCKET_DIR}/Socket
 MONITOR_DIR=monitorLinda
@@ -20,7 +21,7 @@ TUPLA=${TUPLA_DIR}/Tupla
 CPPFLAGS=-I. -I${SOCKET_DIR} -I${MONITOR_DIR} -I${TUPLA_DIR} -O2 -std=c++11 -lsockets # Flags compilacion
 LDFLAGS=-pthread # Flags linkado threads
 
-all: ${CLIENT} ${SERVER}
+all: ${SERVER} ${DESPLIEGUE}
 #----------------------------------------------------------------------------
 #Para gestionar opciones de compilación según la máquina: hendrix tiene sus manías
 #Descomentar la siguiente línea para compilar en hendrix
@@ -34,6 +35,15 @@ ${SERVER}.o: ${SERVER}.cpp
 # Linkado
 ${SERVER}: ${SOCKET}.o ${SERVER}.o ${MONITOR}.o ${TUPLA}.o
 	${CC} ${LDFLAGS} ${SOCKET}.o ${SERVER}.o ${MONITOR}.o ${TUPLA}.o -o ${SERVER} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
+# DESPLIEGUE
+# Compilacion
+${DESPLIEGUE}.o: ${DESPLIEGUE}.cpp 
+	${CC} -c ${CPPFLAGS} ${DESPLIEGUE}.cpp
+
+# Linkado
+${DESPLIEGUE}: ${SOCKET}.o ${DESPLIEGUE}.o
+	${CC} ${LDFLAGS} ${SOCKET}.o ${DESPLIEGUE}.o -o ${DESPLIEGUE} ${SOCKETSFLAGS}
 #-----------------------------------------------------------
 # SOCKETS
 # Compilacion libreria de Sockets
@@ -52,4 +62,4 @@ ${TUPLA}.o: ${TUPLA}.hpp ${TUPLA}.cpp
 # LIMPIEZA
 clean:
 	$(RM) ${SOCKET}.o ${MONITOR}.o ${TUPLA}.o
-	$(RM) ${SERVER} ${SERVER}.o
+	$(RM) ${SERVER} ${SERVER}.o ${DESPLIEGUE} ${DESPLIEGUE}.o
