@@ -17,7 +17,7 @@ using namespace std;
 
 const int N = 5;  // TODO: Clientes simultaneos y/o totales usando el servidor
 
-void servCliente (Socket &soc, int client_fd, Linda &monitor) {
+void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConectados) {
     int length = 100;
     string buffer = "";
 
@@ -26,12 +26,14 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor) {
         cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
         // Cerramos los sockets
         soc.Close(client_fd);
+        clientesConectados--;
         exit(1);
     }
     if (buffer != "INICIO SESION") {  // TODO: Gestion de errores
         cerr << "Peticion incorrecta: recibido \"" + buffer +
             "\" cuando se esperaba \"INICIO SESION\"\n";
         soc.Close(client_fd);
+        clientesConectados--;
         exit(1);
     }
 
@@ -40,6 +42,7 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor) {
         cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
         // Cerramos los sockets
         soc.Close(client_fd);
+        clientesConectados--;
         exit(1);
     }
 
@@ -50,11 +53,13 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor) {
             cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
             // Cerramos los sockets
             soc.Close(client_fd);
+            clientesConectados--;
             exit(1);
         }
         if (buffer == "FIN SESION") {  // TODO: Cierre ordinario
             seguir = false;
             soc.Close(client_fd);
+            clientesConectados--;
         }
 
         else {
@@ -66,7 +71,6 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor) {
             int size = atoi(strtok(NULL, ":"));
             Tupla entrada(size);
             entrada.from_string(strtok(NULL, ":"));
-
             if (tok == "PN") {
                 monitor.PN(entrada);
                 envio = "POST NOTE CORRECTO";
@@ -81,11 +85,19 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor) {
                 Tupla salida = monitor.RdN(entrada);
                 envio = salida.to_string();
             }
+            else if (tok == "MON") {
+                int nTuplas,RdNEnEspera,RNenEspera,RdNrealizadas,RNrealizados,PNrealizadas;
+                monitor.GeneralInfo(nTuplas,RdNEnEspera,RNenEspera,RdNrealizadas,RNrealizados,PNrealizadas);
+                envio= to_string(clientesConectados) + ':' + to_string(nTuplas) + ':'+ to_string(RdNEnEspera) +':'
+                + to_string(RNenEspera) + ':' + to_string(RdNrealizadas)+ ':' +to_string(RNrealizados) + ':' + to_string(PNrealizadas) + ':';
+                cout << envio;
+            }
 
             else {  // TODO: Gestion de errores
                 cerr << "Peticion incorrecta: recibido \"" + buffer +
                     "\" cuando se esperaba \"PN\", \"RN\" o \"RdN\"\n";
                 soc.Close(client_fd);
+                clientesConectados--;
                 exit(1);
             }
             int send_bytes = soc.Send(client_fd, envio);
@@ -93,6 +105,7 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor) {
                 cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
                 // Cerramos los sockets
                 soc.Close(client_fd);
+                clientesConectados--;
                 exit(1);
             }
         }
@@ -134,6 +147,8 @@ int main (int argc, char *argv[]) {
 
     for (int i = 0; i < N; i++) {  // TODO: Cientes a aceptar?
         // Accept
+        int conexiones=0;
+
         client_fd[i] = chan.Accept();
 
         if(client_fd[i] == -1) {  // TODO: Gestion de errores
@@ -142,8 +157,8 @@ int main (int argc, char *argv[]) {
             chan.Close(socket_fd);
             exit(1);
         }
-
-        cliente[i] = thread(&servCliente, ref(chan), client_fd[i], ref(monitor));
+        conexiones++;
+        cliente[i] = thread(&servCliente, ref(chan), client_fd[i], ref(monitor),ref(conexiones));
     }
 
     // ¿Qué pasa si algún thread acaba inesperadamente?

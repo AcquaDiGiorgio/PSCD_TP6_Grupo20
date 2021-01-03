@@ -37,7 +37,10 @@ public:
 	// Constructor de la clase indicando  el puerto de 
 	// escucha del servidor. Para servidores.
 	Socket(int port);
-
+	
+	//Constructor vacío, es necesario inicializarlo después
+	Socket();
+	
 	// MÉTODOS
 
 	// Acepta la conexión de un nuevo cliente.

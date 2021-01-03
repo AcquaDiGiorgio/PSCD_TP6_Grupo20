@@ -42,6 +42,9 @@ Socket::Socket(int port) {
     SERVER_ADDRESS = "localhost";
     SERVER_PORT    = port;
 }
+//Constructor vacío, es necesario inicializarlo después
+Socket::Socket(){};
+
 //-------------------------------------------------------------
 int Socket::Accept() {
 
