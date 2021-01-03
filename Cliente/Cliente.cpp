@@ -8,10 +8,11 @@
 #include <chrono>
 #include <thread>
 #include "Socket.hpp"
+#include "LindaDriver.hpp"
 
 using namespace std;
 
-const int MESSAGE_SIZE = 4001; //mensajes de no más 4000 caracteres
+
 
 // Conectar con el servidor de despliegue para obtener los servidores
 // que se encuentran disponibles para operar.
@@ -255,24 +256,8 @@ void procesoCliente(const string address, const int port) {
 }
 
 int main(int argc, char *argv[]) {
-    if(argc < 3) {
-        cout << "Invocar como: ./Cliente IP PUERTO" << endl;
-        exit(1);
-    }
-    srand(time(NULL));
-    // Dirección y puerto donde escucha el servidor
-    string SERVER_ADDRESS = argv[1];
-    int SERVER_PORT = stoi(argv[2]);
-    const int N_CLIENTES = 2;
-    thread cliente[N_CLIENTES];
 
-    for(int i = 0; i < N_CLIENTES; ++i) {
-        cliente[i] = thread(&procesoCliente,SERVER_ADDRESS, SERVER_PORT);
-    }
 
-    for(int i = 0; i < N_CLIENTES; ++i) {
-        cliente[i].join();
-    }
     
     return 0;
 }

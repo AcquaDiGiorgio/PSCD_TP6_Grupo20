@@ -15,8 +15,12 @@ CC=g++
 CLIENT=Cliente
 SOCKET_DIR=Socket
 SOCKET=${SOCKET_DIR}/Socket
+DRIVER_DIR=LindaDriver
+DRIVER=${DRIVER_DIR}/LindaDriver
+TUPLA_DIR=Tupla
+TUPLA=${TUPLA_DIR}/Tupla
 
-CPPFLAGS=-I. -I${SOCKET_DIR} -O2 -std=c++11 -lsockets # Flags compilacion
+CPPFLAGS=-I. -I${SOCKET_DIR} -I${DRIVER_DIR} -I${TUPLA_DIR} -O2 -std=c++11 -lsockets # Flags compilacion
 LDFLAGS=-pthread # Flags linkado threads
 
 all: ${CLIENT}
@@ -31,15 +35,25 @@ ${CLIENT}.o: ${CLIENT}.cpp
 	${CC} -c ${CPPFLAGS} ${CLIENT}.cpp
 
 # Linkado
-${CLIENT}: ${SOCKET}.o ${CLIENT}.o  
-	${CC} ${LDFLAGS} ${SOCKET}.o ${CLIENT}.o -o ${CLIENT} ${SOCKETSFLAGS}
+${CLIENT}: ${SOCKET}.o ${DRIVER}.o ${TUPLA}.o ${CLIENT}.o  
+	${CC} ${LDFLAGS} ${SOCKET}.o ${DRIVER}.o ${TUPLA}.o ${CLIENT}.o -o ${CLIENT} ${SOCKETSFLAGS}
 #-----------------------------------------------------------
 # SOCKETS
 # Compilacion libreria de Sockets
 ${SOCKET}.o: ${SOCKET}.hpp ${SOCKET}.cpp
 	${CC} -c ${CPPFLAGS} ${SOCKET}.cpp -o ${SOCKET}.o
+#-----------------------------------------------------------
+# Compilacion libreria LindaDriver
+${DRIVER}.o: ${DRIVER}.hpp ${DRIVER}.cpp
+	${CC} -c ${CPPFLAGS} ${DRIVER}.cpp -o ${DRIVER}.o
+#-----------------------------------------------------------
+#Compilacion libreria Tupla
+${TUPLA}.o: ${TUPLA}.hpp ${TUPLA}.cpp
+	${CC} -c ${CPPFLAGS} ${TUPLA}.cpp -o ${TUPLA}.o
 #-----------------------------------------------------------	
 # LIMPIEZA
 clean:
 	$(RM) ${SOCKET}.o
 	$(RM) ${CLIENT} ${CLIENT}.o
+	${RM} ${DRIVER} ${DRIVER}.o
+	${RM} ${TUPLA} ${TUPLA}.o
