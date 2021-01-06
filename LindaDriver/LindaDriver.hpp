@@ -30,6 +30,9 @@ class LindaDriver {
     // Establecer conexion con los tres servidores.
     // Inicializar otros parametros
     LindaDriver(const string dir, const int puerto);
+    // Desctructor LindaDriver
+    // Cerramos las conexiones con los servidores Linda
+    ~LindaDriver();
     //PostNote
     void PN(const Tupla t);
     // Pre: "p" y "t" tienen el mismo tamaño
@@ -41,11 +44,11 @@ class LindaDriver {
     void RN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2);
     // Pre: "p" y "t" tienen el mismo tamaño
     // Post: ReadNote, siendo "p" el patrón y "t" la tupla
-    void RDN(const Tupla p, Tupla& t);
+    void RdN(const Tupla p, Tupla& t);
     // Pre: "p1" y "t1" tienen el mismo tamaño
     //      "p2" y "t2" tienen el mismo tamaño
     // Post: ReadNotes, siendo "p1" y "p2" los patrones y "t1" y "t2" las tuplas
-    void RDN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2);
+    void RdN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2);
 
 
     void pruebaConexion();
