@@ -56,6 +56,10 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConect
             clientesConectados--;
             exit(1);
         }
+        if (rcv_bytes == 0) {
+            soc.Close(client_fd);
+            return;
+        }
         if (buffer == "FIN SESION") {  // TODO: Cierre ordinario
             seguir = false;
             soc.Close(client_fd);
