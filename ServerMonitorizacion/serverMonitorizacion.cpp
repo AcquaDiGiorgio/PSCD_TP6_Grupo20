@@ -7,18 +7,101 @@
 using namespace std;
 
 const int MESSAGE_SIZE = 4001; //mensajes de no más 4000 caracteres
-const int NLindaServers =2;
+const int NLindaServers =3;
 const int FrecuenciaMonitorizacion=5;
 
-void realizarDespliegue(const string address, const int port, string ip[],int puerto[]) {
-    ip[0]= "localhost"; puerto[0]= 20001;
-    ip[1] = "localhost";puerto[1]= 20002;
+/*void realizarDespliegue(const string address, const int port, string ip[],int puerto[]) {
+    //ip[0]= "localhost"; puerto[0]= 20001;
+    //ip[1] = "localhost";puerto[1]= 20002;
     //ip[2] = "localhost";puerto[2]= 20003;
+
+}*/
+
+void obtenerServidores(const string dir, const int puerto, string& dir_1, string& dir_2,
+                                    string& dir_3, int& puerto_1, int& puerto_2, int& puerto_3)
+{
+
+    /*dir_1 = "localdir"; dir_2 = "localdir"; dir_3 = "localdir";
+    puerto_1 = 20000; puerto_2 = 20001; puerto_3 = 20002;*/
+    // Creación del socket con el que se llevará a cabo
+    // la comunicación con el servidor.
+    Socket chan(dir, puerto);
+
+    // Conectamos con el servidor. Probamos varias conexiones
+    const int MAX_ATTEMPS = 10;
+    int count = 0;
+    int socket_fd;
+    do {
+        // Conexión con el servidor
+        socket_fd = chan.Connect();
+        count++;
+
+        // Si error --> esperamos 1 segundo para reconectar
+        if(socket_fd == -1) {
+            this_thread::sleep_for(chrono::seconds(1));
+        }
+    } while(socket_fd == -1 && count < MAX_ATTEMPS);
+
+    // Chequeamos si se ha realizado la conexión
+    if(socket_fd == -1) {
+        exit(1);
+    }
+
+    string mensaje, buffer;
+    int send_bytes, read_bytes;
+
+    // Solicitar datos al registro
+    mensaje = "DAME IPs";
+    send_bytes = chan.Send(socket_fd, mensaje);
+    if(send_bytes == -1) {
+        cerr << "Error al enviar datos: " << strerror(errno) << endl;
+        // Cerramos el socket
+        chan.Close(socket_fd);
+        exit(1);
+    }
+
+    // Recibir respuesta del servidor
+    read_bytes = chan.Recv(socket_fd, buffer, MESSAGE_SIZE);
+    if(read_bytes == -1) {
+        cerr << "Error al recibir datos: " << strerror(errno) << endl;
+        // Cerramos el socket
+        chan.Close(socket_fd);
+        exit(1);
+    }
+
+    // Cerramos el socket
+    int error_code = chan.Close(socket_fd);
+    if(error_code == -1) {
+        cerr << "Error cerrando el socket: " << strerror(errno) << endl;
+    }
+
+    // Extraer ADDRESS PORT del mensaje recibido
+    // "IP1:P1-IP2:P2-IP3:P3"
+
+    int pos = buffer.find("-");
+    string dir_puerto = buffer.substr(0,pos);
+    buffer = buffer.substr(pos+1);
+    pos = dir_puerto.find(":");
+    dir_1 = dir_puerto.substr(0,pos);
+    puerto_1 = stoi(dir_puerto.substr(pos+1,dir_puerto.size()));
+
+    pos = buffer.find("-");
+    dir_puerto = buffer.substr(0,pos);
+    buffer = buffer.substr(pos+1);
+    pos = dir_puerto.find(":");
+    dir_2 = dir_puerto.substr(0,pos);
+    puerto_2 = stoi(dir_puerto.substr(pos+1,dir_puerto.size()));
+
+    pos = buffer.find(":");
+    dir_3 = buffer.substr(0,pos);
+    puerto_3 = stoi(buffer.substr(pos+1,buffer.size()));
+
+
 }
 
 int main(int argc, char *argv[]) {
     if(argc < 3) {
-        cout << "Invocar como: ./Cliente IP PUERTO" << endl;
+        cout << "Invocar como: ./serverMonitorizacion IP PUERTO" << endl;
         exit(1);
     }
     // Dirección y puerto donde escucha el servidor
@@ -30,7 +113,9 @@ int main(int argc, char *argv[]) {
     string servidor[NLindaServers];//Hace falta un socket para cada servidor linda
     Socket chan[NLindaServers];
     int puerto[NLindaServers];
-    realizarDespliegue(SERVER_ADDRESS,SERVER_PORT,servidor,puerto);
+    //realizarDespliegue(SERVER_ADDRESS,SERVER_PORT,servidor,puerto);
+    obtenerServidores(SERVER_ADDRESS, SERVER_PORT, ref(servidor[0]), ref(servidor[1]), ref(servidor[2]),
+            ref(puerto[0]), ref(puerto[1]), ref(puerto[2]));
     
     //Inicializamos los Sockets
     for (int i=0;i<NLindaServers;i++){
