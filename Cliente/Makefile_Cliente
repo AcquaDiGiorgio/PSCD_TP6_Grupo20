@@ -13,11 +13,11 @@
 CC=g++
 
 CLIENT=Cliente
-SOCKET_DIR=Socket
+SOCKET_DIR=../Socket
 SOCKET=${SOCKET_DIR}/Socket
-DRIVER_DIR=LindaDriver
+DRIVER_DIR=../LindaDriver
 DRIVER=${DRIVER_DIR}/LindaDriver
-TUPLA_DIR=Tupla
+TUPLA_DIR=../Tupla
 TUPLA=${TUPLA_DIR}/Tupla
 
 CPPFLAGS=-I. -I${SOCKET_DIR} -I${DRIVER_DIR} -I${TUPLA_DIR} -O2 -std=c++11 -lsockets # Flags compilacion
@@ -53,7 +53,5 @@ ${TUPLA}.o: ${TUPLA}.hpp ${TUPLA}.cpp
 #-----------------------------------------------------------	
 # LIMPIEZA
 clean:
-	$(RM) ${SOCKET}.o
-	$(RM) ${CLIENT} ${CLIENT}.o
-	${RM} ${DRIVER} ${DRIVER}.o
-	${RM} ${TUPLA} ${TUPLA}.o
+	$(RM) ${SOCKET}.o ${DRIVER} ${DRIVER}.o ${TUPLA} ${TUPLA}.o
+	$(RM) ${CLIENT} ${CLIENT}.o 
