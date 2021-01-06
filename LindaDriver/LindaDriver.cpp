@@ -7,11 +7,11 @@ void LindaDriver::obtenerServidores(const string dir, const int puerto, string& 
                                     string& dir_3, int& puerto_1, int& puerto_2, int& puerto_3)
 {
 
-    dir_1 = "localhost"; dir_2 = "localhost"; dir_3 = "localhost";
-    puerto_1 = 20000; puerto_2 = 20001; puerto_3 = 20002;
+    /*dir_1 = "localdir"; dir_2 = "localdir"; dir_3 = "localdir";
+    puerto_1 = 20000; puerto_2 = 20001; puerto_3 = 20002;*/
     // Creación del socket con el que se llevará a cabo
     // la comunicación con el servidor.
-    /*Socket chan(dir, puerto);
+    Socket chan(dir, puerto);
 
     // Conectamos con el servidor. Probamos varias conexiones
     const int MAX_ATTEMPS = 10;
@@ -37,7 +37,7 @@ void LindaDriver::obtenerServidores(const string dir, const int puerto, string& 
     int send_bytes, read_bytes;
 
     // Solicitar datos al registro
-    mensaje = "MENSAJE PETICION SERVIDORES";
+    mensaje = "DAME IPs";
     send_bytes = chan.Send(socket_fd, mensaje);
     if(send_bytes == -1) {
         cerr << "Error al enviar datos: " << strerror(errno) << endl;
@@ -82,7 +82,7 @@ void LindaDriver::obtenerServidores(const string dir, const int puerto, string& 
     dir_3 = buffer.substr(0,pos);
     puerto_3 = stoi(buffer.substr(pos+1,buffer.size()));
 
-*/
+
 }
 
 // Iniciar la comunicacion con los servidores linda
@@ -116,6 +116,29 @@ void LindaDriver::iniciarComunicacion(const string dir_1, const string dir_2, co
         // Chequeamos si se ha realizado la conexión
         if(socket_fd[i] == -1) {
             exit(1);
+        }
+        string buffer;
+        string mensaje = "INICIO SESION";
+        int send_bytes = server[i]->Send(socket_fd[i], mensaje);
+        if(send_bytes == -1) {
+            cerr << "Error al enviar datos: " << strerror(errno) << endl;
+            // Cerramos el socket
+            server[i]->Close(socket_fd[i]);
+            exit(1);
+        }
+        // Recibir respuesta del servidor
+        int read_bytes = server[i]->Recv(socket_fd[i], buffer, MESSAGE_SIZE);
+        if(read_bytes == -1) {
+            cerr << "Error al recibir datos: " << strerror(errno) << endl;
+            // Cerramos el socket
+            server[i]->Close(socket_fd[i]);
+            exit(1);
+        }
+        if(buffer != "SESION ACEPTADA"){
+             cerr << "Respuesta del servidor incorrecta: recibido \"" + buffer +
+            "\" cuando se esperaba \"SESION ACEPTADA\"\n";
+        server[i]->Close(socket_fd[i]);
+        exit(1);
         }
     }
 }
