@@ -10,9 +10,6 @@
 using namespace std;
 
 
-
-
-
 Linda::Linda (){
     for (int i=0;i<NSizeTuplas;i++){
         tuplas[i].empty();
@@ -31,7 +28,7 @@ void Linda::PN(Tupla t) {//añade la tupla a su lista correspondiente
 Tupla Linda::RN(Tupla t) {
     int sz=t.size();
     unique_lock<mutex> lck(mtx[sz]);
-    removesEnEpera++;
+    removesEnEspera++;
     Tupla retVal(sz);
     bool encontrado=false;
     //Mientras no ha encontrado una tupla que encaje
@@ -51,7 +48,7 @@ Tupla Linda::RN(Tupla t) {
             espera[sz].wait(lck);
         }
     }
-    removesEnEpera--;
+    removesEnEspera--;
     removesRealizados++;
     return retVal;
 }
@@ -81,6 +78,101 @@ Tupla Linda::RdN(Tupla t) {
     lecturasEnEspera--;
     lecturasRealizadas++;
     return retVal;
+}
+
+list<Tupla> Linda::RNM(Tupla t1, Tupla t2){
+	int sz = t1.size();
+	unique_lock<mutex> lck(mtx[sz]);
+	removesEnEspera += 2;
+	
+	list<Tupla> retVal;
+	retVal.empty();
+
+	bool encontrados = false;
+	while(!encontrados){
+		std::list<Tupla>::iterator it1 = tuplas[sz].begin();	
+		std::list<Tupla>::iterator it2 = tuplas[sz].begin();
+		it2++;
+		
+		Tupla retVal1(sz);
+		Tupla retVal2(sz);
+
+		while(!encontrados && it1 != tuplas[sz].end()){
+			while(!encontrados && it2 != tuplas[sz].end()){
+				if(matchMultiple(t1,t2,*it1,*it2)){
+					retVal1.copyFrom(*it1);
+					retVal2.copyFrom(*it2);
+					retVal.push_back(retVal1);
+					retVal.push_back(retVal2);
+					encontrados = true;
+					tuplas[sz].erase(it1);
+					tuplas[sz].erase(it2);
+				}
+				else{
+					cout << "Not matched" << endl;
+				}	
+				it2++;
+			}
+			it1++;
+			it2 = it1++;
+		}
+		 
+
+		if(!encontrados){
+			espera[sz].wait(lck);
+		}
+	}	
+
+	removesEnEspera -= 2;
+    removesRealizados += 2;
+	return retVal;
+}
+
+list<Tupla> Linda::RdNM(Tupla t1, Tupla t2){
+	int sz = t1.size();
+	unique_lock<mutex> lck(mtx[sz]);
+	lecturasEnEspera += 2;
+
+	list<Tupla> retVal;
+	retVal.empty();
+
+	bool encontrados = false;
+	while(!encontrados){
+		std::list<Tupla>::iterator it1 = tuplas[sz].begin();	
+		std::list<Tupla>::iterator it2 = tuplas[sz].begin();
+		it2++;
+		
+		Tupla retVal1(sz);
+		Tupla retVal2(sz);
+
+
+		while(!encontrados && it1 != tuplas[sz].end()){
+			while(!encontrados && it2 != tuplas[sz].end()){
+				if(matchMultiple(t1,t2,*it1,*it2)){
+					retVal1.copyFrom(*it1);
+					retVal2.copyFrom(*it2);
+					retVal.push_back(retVal1);
+					retVal.push_back(retVal2);
+					encontrados = true;
+				}
+				else{
+					cout << "Not matched" << endl;
+				}	
+				it2++;
+			}
+			it1++;
+			it2 = it1++;
+		}
+		 
+
+		if(!encontrados){
+			espera[sz].wait(lck);
+		}
+	}
+
+	lecturasEnEspera -= 2;
+    lecturasRealizadas += 2;
+	return retVal;
 }
 
 //Compara que los patrones p1 y p2 encajen con las tuplas p1 y p2
@@ -140,8 +232,8 @@ int Linda::LecturasEnEspera()const{
     return lecturasEnEspera;
 }
 
-int Linda::RemovesEnEpera()const{
-    return removesEnEpera;
+int Linda::RemovesEnEspera()const{
+    return removesEnEspera;
 }
 
 int Linda::LecturasRealizadas()const{
@@ -160,7 +252,7 @@ void Linda::GeneralInfo(int& nTuplas,int& RdNEnEspera,int& RNenEpera,
     int& RdNrealizadas,int& RNrealizados,int& PNrealizadas)const{
         nTuplas=NumeroDeTuplas();
         RdNEnEspera=lecturasEnEspera;
-        RNenEpera=removesEnEpera;
+        RNenEpera=removesEnEspera;
         RdNrealizadas=lecturasRealizadas;
         RNrealizados=removesRealizados;
         PNrealizadas=escriturasRealizadas;

@@ -17,7 +17,7 @@ class Linda{
     mutex mtx[NSizeTuplas];//y variables de sinconización por cada lista de tuplas
     
     int lecturasEnEspera=0;
-    int removesEnEpera=0;
+    int removesEnEspera=0;
     int lecturasRealizadas=0;
     int removesRealizados=0;
     int escriturasRealizadas=0;
@@ -35,7 +35,7 @@ class Linda{
 
     int LecturasEnEspera()const;
 
-    int RemovesEnEpera()const;
+    int RemovesEnEspera()const;
 
     int LecturasRealizadas()const;
 
@@ -53,5 +53,9 @@ class Linda{
     Tupla RN(Tupla t);
 
     Tupla RdN(Tupla t);
+
+	list<Tupla> RNM(Tupla t1, Tupla t2);
+
+	list<Tupla> RdNM(Tupla t1, Tupla t2);
 };
 
