@@ -6,9 +6,10 @@
 //*****************************************************************
 #include <iostream>
 #include <chrono>
+#include <string>
 #include <thread>
-#include "Tupla.hpp"
-#include "LindaDriver.hpp"
+#include <Tupla.hpp>
+#include <LindaDriver.hpp>
 
 using namespace std;
 
@@ -30,16 +31,16 @@ Tupla crearTupla(){
 }
 
 // Hilo de ejecucion de un cliente que interactua con el servidor linda
-void procesoCliente(const string address, const int port) {
+void procesoCliente(LindaDriver& LD) {
 
     srand(time(0));
 
-    LindaDriver LD(address, port);
+   
     int option = 0;
     Tupla tupla(0);
     Tupla tuplaLeer(0);
     
-    while( option != 3 ){
+    while( option != 0 ){
         cout << "PN: 1, RdN: 2, RN: 3, RdN_2: 4, RN_2: 5, Salir: 0" << endl;
         cout << "Opcion: ";
         cin >> option;
@@ -75,8 +76,9 @@ int main(int argc, char *argv[]) {
         cout << "Ejecute como: Cliente *Direccion* *Puerto*" << endl;
         exit(1);
     }
-
-    thread proceso = thread(&procesoCliente, argv[1], stoi(argv[2]));
+    
+    LindaDriver LD(argv[1], stoi(argv[2]));
+    thread proceso = thread(&procesoCliente,ref(LD));
     proceso.join();     
     return 0;
 }
