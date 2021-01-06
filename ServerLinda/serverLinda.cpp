@@ -9,13 +9,13 @@
 #include <thread>
 #include <string>
 #include <cstdlib>
-#include <Socket.hpp>
-#include <Tupla.hpp>
-#include <monitorLinda.hpp>
+#include "Socket.hpp"
+#include "Tupla.hpp"
+#include "monitorLinda.hpp"
 
 using namespace std;
 
-const int N = 5;  // TODO: Clientes simultaneos y/o totales usando el servidor
+const int N = 1;  // TODO: Clientes simultaneos y/o totales usando el servidor
 
 void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConectados) {
     int length = 100;
@@ -56,10 +56,6 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConect
             clientesConectados--;
             exit(1);
         }
-        if (rcv_bytes == 0) {
-            soc.Close(client_fd);
-            return;
-        }
         if (buffer == "FIN SESION") {  // TODO: Cierre ordinario
             seguir = false;
             soc.Close(client_fd);
@@ -71,22 +67,25 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConect
             // TODO: Gestion de errores
             char* aux = new char[buffer.length()+1];
             strcpy(aux, buffer.c_str());
-            string tok = strtok(aux, ":"), envio;
+			string envio, e1, e2;
+            string tok = strtok(aux, ":");
             int size = atoi(strtok(NULL, ":"));
-            Tupla entrada(size);
-            entrada.from_string(strtok(NULL, ":"));
+            Tupla entrada1(size);
+            e1 = strtok(NULL, ":");
+			//cout << e1 << endl;
+            entrada1.from_string(e1);
             if (tok == "PN") {
-                monitor.PN(entrada);
+                monitor.PN(entrada1);
                 envio = "POST NOTE CORRECTO";
             }
 
             else if (tok == "RN") {
-                Tupla salida = monitor.RN(entrada);
+                Tupla salida = monitor.RN(entrada1);
                 envio = salida.to_string();
             }
 
             else if (tok == "RdN") {
-                Tupla salida = monitor.RdN(entrada);
+                Tupla salida = monitor.RdN(entrada1);
                 envio = salida.to_string();
             }
             else if (tok == "MON") {
@@ -97,13 +96,32 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConect
                 cout << envio;
             }
 
-            else {  // TODO: Gestion de errores
-                cerr << "Peticion incorrecta: recibido \"" + buffer +
-                    "\" cuando se esperaba \"PN\", \"RN\" o \"RdN\"\n";
-                soc.Close(client_fd);
-                clientesConectados--;
-                exit(1);
-            }
+			else{
+				Tupla entrada2(size);
+				e2 = strtok(NULL, ":");
+				//cout << e2 << endl;
+				entrada2.from_string(e2);
+
+				if (tok == "RN2") {
+					list<Tupla> salida = monitor.RNM(entrada1,entrada2);
+					envio = salida.front().to_string() + salida.back().to_string();				
+				}
+
+				else if (tok == "RdN2") {
+					list<Tupla> salida = monitor.RdNM(entrada1,entrada2);
+					envio = salida.front().to_string() + salida.back().to_string();
+				}
+
+            	else {  // TODO: Gestion de errores
+                	cerr << "Peticion incorrecta: recibido \"" + buffer +
+                	    "\" cuando se esperaba \"MON\", \"PN\", \"RN\", \"RdN\", \"RN2\" o \"RdN2\" \n";
+                	soc.Close(client_fd);
+					clientesConectados--;
+                	exit(1);
+            	}
+			}	
+
+            
             int send_bytes = soc.Send(client_fd, envio);
             if(send_bytes == -1) {  // TODO: Gestion de errores
                 cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
