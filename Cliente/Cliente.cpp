@@ -31,15 +31,18 @@ Tupla crearTupla(){
 }
 
 // Hilo de ejecucion de un cliente que interactua con el servidor linda
-void procesoCliente(LindaDriver& LD) {
+void procesoCliente(string IP, int puerto) {
 
     srand(time(0));
 
-   
-    int option = 0;
+    int option = -1;
     Tupla tupla(0);
+    Tupla tupla2(0);
     Tupla tuplaLeer(0);
-    
+    Tupla tuplaLeer2(0);
+
+    LindaDriver LD(IP, puerto);
+
     while( option != 0 ){
         cout << "PN: 1, RdN: 2, RN: 3, RdN_2: 4, RN_2: 5, Salir: 0" << endl;
         cout << "Opcion: ";
@@ -53,18 +56,30 @@ void procesoCliente(LindaDriver& LD) {
             case 2:
                 tupla.copyFrom(crearTupla());
                 LD.RdN(tupla, ref(tuplaLeer));
-                cout << tuplaLeer.to_string();
+                cout << tuplaLeer.to_string() << endl;
                 break;
             case 3:
                 tupla.copyFrom(crearTupla());
                 LD.RN(tupla, ref(tuplaLeer));
+                cout << tuplaLeer.to_string() << endl;
+                break;
+            case 4:
+                tupla.copyFrom(crearTupla());
+                tupla2.copyFrom(crearTupla());
+                LD.RdN_2(tupla, tupla2, ref(tuplaLeer), ref(tuplaLeer2));
+                cout << tuplaLeer.to_string() << " - " << tuplaLeer2.to_string() << endl;
+                break;
+            case 5:
+                tupla.copyFrom(crearTupla());
+                tupla2.copyFrom(crearTupla());
+                LD.RN_2(tupla, tupla2, ref(tuplaLeer), ref(tuplaLeer2));
+                cout << tuplaLeer.to_string() << " - " << tuplaLeer2.to_string() << endl;
                 break;
             case 0:
                 cout << "Terminando..." << endl;
                 break;
             default:
                 cout << "Elija una opcion valida" << endl;
-                cout << "Opciones 4 y 5 No Implementadas" << endl;
         }
     }   
 }
@@ -77,8 +92,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
-    LindaDriver LD(argv[1], stoi(argv[2]));
-    thread proceso = thread(&procesoCliente,ref(LD));
+    thread proceso = thread(&procesoCliente, argv[1], atoi(argv[2]));
     proceso.join();     
     return 0;
 }
