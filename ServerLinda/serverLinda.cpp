@@ -27,7 +27,7 @@ bool connectionError(Socket soc, int client_fd, int bytes){
         retVal = true;
 
     }else if(bytes == -1){
-        cout << "Error grava en el sistema, terminando..." << endl;
+        cout << "Error grave en el sistema, terminando..." << endl;
         exit(1);
 
     }
