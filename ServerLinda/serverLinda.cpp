@@ -15,20 +15,36 @@
 
 using namespace std;
 
-const int N = 1;  // TODO: Clientes simultaneos y/o totales usando el servidor
+const int N = 10000;  // TODO: Clientes simultaneos y/o totales usando el servidor
 
-void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConectados) {
+bool connectionError(Socket soc, int client_fd, int bytes){
+    bool retVal = false;
+    
+    if(bytes == 0){
+        cerr << "Error al enviar/recibir datos\n";
+
+        soc.Close(client_fd);
+        retVal = true;
+
+    }else if(bytes == -1){
+        cout << "Error grava en el sistema, terminando..." << endl;
+        exit(1);
+
+    }
+    
+    return retVal;
+}
+
+void servCliente (Socket &soc, int client_fd, Linda &monitor, int& clientesConectados) {
     int length = 100;
     string buffer = "";
 
     int rcv_bytes = soc.Recv(client_fd,buffer,length);
-    if (rcv_bytes == -1) {  // TODO: Gestion de errores
-        cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
-        // Cerramos los sockets
-        soc.Close(client_fd);
+    if(connectionError(soc, client_fd, rcv_bytes)) {
         clientesConectados--;
-        exit(1);
+        return;
     }
+    
     if (buffer != "INICIO SESION") {  // TODO: Gestion de errores
         cerr << "Peticion incorrecta: recibido \"" + buffer +
             "\" cuando se esperaba \"INICIO SESION\"\n";
@@ -38,24 +54,19 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConect
     }
 
     int send_bytes = soc.Send(client_fd, "SESION ACEPTADA");
-    if(send_bytes == -1) {  // TODO: Gestion de errores
-        cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
-        // Cerramos los sockets
-        soc.Close(client_fd);
+    if(connectionError(soc, client_fd, send_bytes)) {
         clientesConectados--;
-        exit(1);
+        return;
     }
 
     bool seguir = true;
     while (seguir) {
         rcv_bytes = soc.Recv(client_fd,buffer,length);
-        if (rcv_bytes == -1) {  // TODO: Gestion de errores
-            cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
-            // Cerramos los sockets
-            soc.Close(client_fd);
+        if(connectionError(soc, client_fd, rcv_bytes)) {
             clientesConectados--;
-            exit(1);
+            return;
         }
+
         if (buffer == "FIN SESION") {  // TODO: Cierre ordinario
             seguir = false;
             soc.Close(client_fd);
@@ -102,12 +113,12 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConect
 				//cout << e2 << endl;
 				entrada2.from_string(e2);
 
-				if (tok == "RN2") {
+				if (tok == "RN_2") {
 					list<Tupla> salida = monitor.RNM(entrada1,entrada2);
 					envio = salida.front().to_string() + salida.back().to_string();				
 				}
 
-				else if (tok == "RdN2") {
+				else if (tok == "RdN_2") {
 					list<Tupla> salida = monitor.RdNM(entrada1,entrada2);
 					envio = salida.front().to_string() + salida.back().to_string();
 				}
@@ -117,18 +128,15 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConect
                 	    "\" cuando se esperaba \"MON\", \"PN\", \"RN\", \"RdN\", \"RN2\" o \"RdN2\" \n";
                 	soc.Close(client_fd);
 					clientesConectados--;
-                	exit(1);
+                	return;
             	}
 			}	
 
             
             int send_bytes = soc.Send(client_fd, envio);
-            if(send_bytes == -1) {  // TODO: Gestion de errores
-                cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
-                // Cerramos los sockets
-                soc.Close(client_fd);
+            if(connectionError(soc, client_fd, send_bytes)) {
                 clientesConectados--;
-                exit(1);
+                return;
             }
         }
     }
