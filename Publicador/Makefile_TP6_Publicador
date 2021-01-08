@@ -1,0 +1,59 @@
+#*****************************************************************
+# File:   Makefile_p5_e1_e2
+# Author: PSCD-Unizar
+# Date:   octubre 2020
+# Coms:   Ejemplo de Makefile para la práctica 5 de PSCD
+#         "make -f Makefile_p5_e1_e2" construye todos los ejecutables
+#         "make -f Makefile_p5_e1_e2 PUBLIe" construye "PUBLIe"
+#         ....
+#         Es necesario descomentar la línea 28 para poder compilar en hendrix
+#*****************************************************************
+
+#---------------------------------------------------------
+CC=g++
+
+PUBLI=Publicador
+DRIVER_DIR=../LindaDriver
+DRIVER=${DRIVER_DIR}/LindaDriver
+TUPLA_DIR=../Tupla
+TUPLA=${TUPLA_DIR}/Tupla
+SOCKET_DIR=../Socket
+SOCKET=${SOCKET_DIR}/Socket
+
+CPPFLAGS=-I. -I${DRIVER_DIR} -I${TUPLA_DIR} -I${SOCKET_DIR} -O2 -std=c++11 -lsockets # Flags compilacion
+LDFLAGS=-pthread # Flags linkado threads
+
+all: ${PUBLI}
+#----------------------------------------------------------------------------
+#Para gestionar opciones de compilación según la máquina: hendrix tiene sus manías
+#Descomentar la siguiente línea para compilar en hendrix
+#SOCKETSFLAGS=-lsocket -lnsl
+#-----------------------------------------------------------
+# PUBLIE
+# Compilacion
+${PUBLI}.o: ${PUBLI}.cpp
+	${CC} -c ${CPPFLAGS} ${PUBLI}.cpp
+
+# Linkado
+${PUBLI}: ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${PUBLI}.o  
+	${CC} ${LDFLAGS} ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${PUBLI}.o -o ${PUBLI} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
+# TUPLA
+# Compilacion libreria Tupla
+${TUPLA}.o: ${TUPLA}.hpp ${TUPLA}.cpp
+	${CC} -c ${CPPFLAGS} ${TUPLA}.cpp -o ${TUPLA}.o
+#-----------------------------------------------------------	
+# SOCKETS
+# Compilacion libreria de Sockets
+${SOCKET}.o: ${SOCKET}.hpp ${SOCKET}.cpp
+	${CC} -c ${CPPFLAGS} ${SOCKET}.cpp -o ${SOCKET}.o
+#-----------------------------------------------------------	
+# DRIVER
+# Compilacion libreria de Sockets
+${DRIVER}.o: ${DRIVER}.hpp ${DRIVER}.cpp 
+	${CC} -c ${CPPFLAGS} ${DRIVER}.cpp -o ${DRIVER}.o
+#-----------------------------------------------------------
+# LIMPIEZA
+clean:
+	$(RM) ${DRIVER}.o
+	$(RM) ${PUBLI} ${PUBLI}.o
