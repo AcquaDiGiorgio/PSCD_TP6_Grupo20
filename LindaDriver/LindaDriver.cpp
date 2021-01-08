@@ -290,14 +290,14 @@ void LindaDriver::RN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2) {
 
     if( ! ( size1 < 1 || size1 > 6 || size1 != size2 ) ){
         int size = size1;
-        string patron = patron1 + "," + patron2;
-        //string send =  
+        string patron = patron1 + ":" + patron2;
+        string send = "RN_2:" + to_string(size) + ":" + patron;
 
         if(size >= 1 && size <= 3) index = 0;
         else if(size >= 4 && size <= 5) index = 1;
         else index = 2;
 
-        send_bytes = server[index]->Send(socket_fd[index], "RN_2:" + patron);
+        send_bytes = server[index]->Send(socket_fd[index], send);
         if(send_bytes == -1) {
             cerr << "Error al enviar datos: " << strerror(errno) << endl;
             // Cerramos el socket
@@ -316,7 +316,7 @@ void LindaDriver::RN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2) {
         t1.copyFrom(Tupla(p1.size()));//establece el tamaño de la tupla t
         t2.copyFrom(Tupla(p2.size()));//establece el tamaño de la tupla t
         t1.from_string(buffer.substr(0,pos));
-        t2.from_string(buffer.substr(pos+1,buffer.size()));
+        t2.from_string(buffer.substr(pos,buffer.size()));
         cout << "RN_2 CORRECTO "<< endl;
 
     }else if( size1 != size2 ) cout << "Las tuplas a enviar no tienen el mismo tamanyo" << endl;
@@ -373,14 +373,14 @@ void LindaDriver::RdN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2) {
     
     if( ! ( size1 < 1 || size1 > 6 || size1 != size2) ){
         int size = size1;
-        string patron = patron1 + "," + patron2;
+        string patron = patron1 + ":" + patron2;
 
         if(size >= 1 && size <= 3) index = 0;
         else if(size >= 4 && size <= 5) index = 1;
         else index = 2;
-        //string send =  
+        string send = "RdN_2:" + to_string(size) + ":" + patron; 
 
-        send_bytes = server[index]->Send(socket_fd[index], "RdN_2:" + patron);
+        send_bytes = server[index]->Send(socket_fd[index], send);
         if(send_bytes == -1) {
             cerr << "Error al enviar datos: " << strerror(errno) << endl;
             // Cerramos el socket
@@ -398,7 +398,7 @@ void LindaDriver::RdN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2) {
         t1.copyFrom(Tupla(p1.size()));//establece el tamaño de la tupla t
         t2.copyFrom(Tupla(p2.size()));//establece el tamaño de la tupla t
         t1.from_string(buffer.substr(0,pos));
-        t2.from_string(buffer.substr(pos+1,buffer.size()));
+        t2.from_string(buffer.substr(pos,buffer.size()));
         cout << "RdN_2 CORRECTO "<< endl;
 
     }else if( size1 != size2 ) cout << "Las tuplas a enviar no tienen el mismo tamanyo" << endl;
