@@ -64,9 +64,11 @@ void LindaDriver::obtenerServidores(const string dir, const int puerto, string& 
     // Extraer ADDRESS PORT del mensaje recibido
     // "IP1:P1-IP2:P2-IP3:P3"
 
+
     int pos = buffer.find("-");
     string dir_puerto = buffer.substr(0,pos);
     buffer = buffer.substr(pos+1);
+    
     pos = dir_puerto.find(":");
     dir_1 = dir_puerto.substr(0,pos);
     puerto_1 = stoi(dir_puerto.substr(pos+1,dir_puerto.size()));
@@ -74,6 +76,7 @@ void LindaDriver::obtenerServidores(const string dir, const int puerto, string& 
     pos = buffer.find("-");
     dir_puerto = buffer.substr(0,pos);
     buffer = buffer.substr(pos+1);
+    
     pos = dir_puerto.find(":");
     dir_2 = dir_puerto.substr(0,pos);
     puerto_2 = stoi(dir_puerto.substr(pos+1,dir_puerto.size()));
@@ -82,7 +85,9 @@ void LindaDriver::obtenerServidores(const string dir, const int puerto, string& 
     dir_3 = buffer.substr(0,pos);
     puerto_3 = stoi(buffer.substr(pos+1,buffer.size()));
 
-
+    cout << dir_1 << " " << to_string(puerto_1) << endl;
+    cout << dir_2 << " " << to_string(puerto_2) << endl;
+    cout << dir_3 << " " << to_string(puerto_3) << endl;
 }
 
 // Iniciar la comunicacion con los servidores linda
@@ -153,7 +158,7 @@ LindaDriver::LindaDriver(const string dir, const int puerto){
     string dir_1, dir_2, dir_3;
     int puerto_1, puerto_2, puerto_3;
    
-    obtenerServidores(dir,puerto,dir_1,dir_2,dir_3,puerto_1,puerto_2,puerto_3);
+    obtenerServidores(dir,puerto,ref(dir_1),ref(dir_2),ref(dir_3),ref(puerto_1),ref(puerto_2),ref(puerto_3));
     // Establecer comunicacion con los servidores obtenidos
     
     iniciarComunicacion(dir_1,dir_2,dir_3,puerto_1,puerto_2,puerto_3);   
@@ -164,6 +169,7 @@ LindaDriver::~LindaDriver(){
         server[i]->Send(socket_fd[i], "FIN SESION");
         server[i]->Close(socket_fd[i]);
     }
+    
 }
 
 void LindaDriver::pruebaConexion() {
@@ -267,7 +273,7 @@ void LindaDriver::RN(const Tupla p, Tupla& t) {
         // Convertir respuesta en tupla
         t.copyFrom(Tupla(p.size()));//establece el tamaño de la tupla t
         t.from_string(buffer);
-        cout << "RN CORRECTO "<< t.to_string() <<endl;
+        cout << "RN CORRECTO " << endl;
 
     } else cout << "La tupla a enviar no es valida" << endl;
 }
@@ -311,7 +317,7 @@ void LindaDriver::RN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2) {
         t2.copyFrom(Tupla(p2.size()));//establece el tamaño de la tupla t
         t1.from_string(buffer.substr(0,pos));
         t2.from_string(buffer.substr(pos+1,buffer.size()));
-        cout << "RN CORRECTO "<<endl <<t1.to_string() <<endl <<endl <<t2.to_string() <<endl;
+        cout << "RN_2 CORRECTO "<< endl;
 
     }else if( size1 != size2 ) cout << "Las tuplas a enviar no tienen el mismo tamanyo" << endl;
     else cout << "El tamnyo de las tuplas a enviar no es valido" << endl;
@@ -332,6 +338,7 @@ void LindaDriver::RdN(const Tupla p, Tupla& t) {
         else if(size >= 4 && size <= 5) index = 1;
         else index = 2;
         string send = "RdN:" + to_string(size) + ":" + patron;
+        
         send_bytes = server[index]->Send(socket_fd[index], send);
         if(send_bytes == -1) {
             cerr << "Error al enviar datos: " << strerror(errno) << endl;
@@ -339,6 +346,7 @@ void LindaDriver::RdN(const Tupla p, Tupla& t) {
             server[index]->Close(socket_fd[index]);
             exit(1);
         }
+
         read_bytes = server[index]->Recv(socket_fd[index], buffer, MESSAGE_SIZE);
         if(read_bytes == -1) {
             cerr << "Error al recibir datos: " << strerror(errno) << endl;
@@ -349,7 +357,7 @@ void LindaDriver::RdN(const Tupla p, Tupla& t) {
         // Convertir respuesta en tupla
         t.copyFrom(Tupla(p.size()));//establece el tamaño de la tupla t
         t.from_string(buffer);        
-        cout << "RdN CORRECTO "<<endl <<t.to_string() <<endl;
+        cout << "RdN CORRECTO " << endl;
     }else cout << "La tupla a enviar no es valida" << endl;
 }
 
@@ -391,7 +399,7 @@ void LindaDriver::RdN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2) {
         t2.copyFrom(Tupla(p2.size()));//establece el tamaño de la tupla t
         t1.from_string(buffer.substr(0,pos));
         t2.from_string(buffer.substr(pos+1,buffer.size()));
-        cout << "RdN CORRECTO "<<endl <<t1.to_string() <<endl <<endl <<t2.to_string() <<endl;
+        cout << "RdN_2 CORRECTO "<< endl;
 
     }else if( size1 != size2 ) cout << "Las tuplas a enviar no tienen el mismo tamanyo" << endl;
     else cout << "El tamnyo de las tuplas a enviar no es valido" << endl;
