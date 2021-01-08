@@ -4,8 +4,8 @@
 #include <mutex>
 #include <list>
 #include <map>
-#include "Tupla.hpp"
-#include "monitorLinda.hpp"
+#include <Tupla.hpp>
+#include <monitorLinda.hpp>
 
 using namespace std;
 
@@ -16,12 +16,121 @@ Linda::Linda (){
     }
 }
 
+bool Linda::exsistePareja(const Tupla& p, const Tupla& p2, const Tupla& t1,  std::list<Tupla>::iterator& t2){
+    int sz=p.size();
+     for (std::list<Tupla>::iterator it = tuplas[sz].begin();
+        it != tuplas[sz].end(); ++it){
+        if (matchMultiple(p,p2,t1,*it)){
+            t2=it;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Linda::tuplaEsperada(const Tupla& t){
+    int sz=t.size();
+    for (std::list<PuntoEspera*>::iterator it = puntosDeEspera[sz].begin();
+        it != puntosDeEspera[sz].end(); ++it){
+        int op=(*it)->opcode;
+        if (op==RNcode || op==RdNcode && t.match((*it)->buscando)){
+            //cout << "MATCH "<<t.to_string()<<endl;
+            (*it)->encontrada.copyFrom(t);
+            (*it)->despertar->notify_one();
+            it=puntosDeEspera[sz].erase(it);
+            
+            if(op==RNcode){
+                return true;
+            }
+            
+        } else if(op==RN_2code || op==RdN_2code){
+            std::list<Tupla>::iterator pareja;
+            if (t.match((*it)->buscando)){
+                if(exsistePareja((*it)->buscando,(*it)->buscando2,t,pareja)){
+                    //cout << "MATCH MULTIPLE"<<t.to_string()<<(*pareja).to_string()<<endl;
+                    (*it)->encontrada.copyFrom(t);
+                    (*it)->encontrada2.copyFrom(*pareja);
+                    (*it)->despertar->notify_one();
+                    it=puntosDeEspera[sz].erase(it);
+
+                    if(op==RN_2code){
+                        tuplas[sz].erase(pareja);
+                        return true;
+                    }
+                }
+
+            }else if(t.match((*it)->buscando2)){
+                if(exsistePareja((*it)->buscando2,(*it)->buscando,t,pareja)){
+                    //cout << "MATCH MULTIPLE"<<t.to_string()<<(*pareja).to_string()<<endl;
+                    (*it)->encontrada2.copyFrom(t);
+                    (*it)->encontrada.copyFrom(*pareja);
+                    (*it)->despertar->notify_one();
+                    it=puntosDeEspera[sz].erase(it);
+
+                    if(op==RN_2code){
+                        tuplas[sz].erase(pareja);
+                        return true;
+                    }
+                }
+
+            }
+
+        }
+
+    }
+    return false;
+}
+
+//función auxiliar para RdN y RN. Duerme al proceso hasta que se publique una tupla que haga match con t, la cual se devuelve en t2 
+void Linda::esperarTupla(const int opcode,const Tupla& t, Tupla& t2, unique_lock<mutex>& lck){
+    int sz=t.size();
+
+    PuntoEspera* punto= new PuntoEspera{
+        opcode,
+        Tupla(t),
+        Tupla(0),
+        new condition_variable,
+        Tupla(sz),
+        Tupla(0)
+    };
+    //cout << "BUSCO TUPLA" << t.to_string()<<endl;
+    puntosDeEspera[sz].push_back(punto);
+    punto->despertar->wait(lck);
+    t2.copyFrom(punto->encontrada);
+    delete punto->despertar;
+    delete punto;
+    //cout<< "DESPIERTO "<< t2.to_string()<<endl;
+}
+
+void Linda::esperarTupla(const int opcode,const Tupla& t,const Tupla& t2, Tupla& retVal,Tupla& retVal2, unique_lock<mutex>& lck){
+    int sz=t.size();
+
+    PuntoEspera* punto= new PuntoEspera{
+        opcode,
+        Tupla(t),
+        Tupla(t2),
+        new condition_variable,
+        Tupla(sz),
+        Tupla(sz)
+    };
+    //cout << "BUSCO TUPLAS" << t.to_string()<< t2.to_string()<<endl;
+    puntosDeEspera[sz].push_back(punto);
+    punto->despertar->wait(lck);
+    retVal.copyFrom(punto->encontrada);
+    retVal2.copyFrom(punto->encontrada2);
+    delete punto->despertar;
+    delete punto;
+    //cout<< "DESPIERTO "<<retVal.to_string()<< retVal2.to_string()<<endl;
+}
+
 void Linda::PN(Tupla t) {//añade la tupla a su lista correspondiente
     int sz=t.size();
     unique_lock<mutex> lck(mtx[sz]);
-    tuplas[sz].push_back(t);
-    //Y avisa a todos procesos esperando en esa lista
-    espera[sz].notify_all();
+    if (!tuplaEsperada(t)){
+        tuplas[sz].push_back(t);
+        //Y avisa a todos procesos esperando en esa lista
+        espera[sz].notify_all();
+    }
     escriturasRealizadas++;
 }
 
@@ -32,22 +141,21 @@ Tupla Linda::RN(Tupla t) {
     Tupla retVal(sz);
     bool encontrado=false;
     //Mientras no ha encontrado una tupla que encaje
-    while (!encontrado){
-        //Se recorre toda la lista de tuplas
-        for (std::list<Tupla>::iterator it = tuplas[sz].begin();
-            (!encontrado) && it != tuplas[sz].end(); ++it){
+    //Se recorre toda la lista de tuplas
+    for (std::list<Tupla>::iterator it = tuplas[sz].begin();
+        (!encontrado) && it != tuplas[sz].end(); ++it){
 
-            if (it->match(t)){
-                retVal.copyFrom(*it);
-                encontrado=true;
-                tuplas[sz].erase(it);
-            }
-        }
-        //Si no ha encontrado una tupla que le satisfazca, se duerme
-        if (!encontrado) {
-            espera[sz].wait(lck);
+        if (it->match(t)){
+            retVal.copyFrom(*it);
+            encontrado=true;
+            tuplas[sz].erase(it);
         }
     }
+    //Si no ha encontrado una tupla que le satisfazca, se duerme
+    if (!encontrado) {
+        esperarTupla(RNcode,t,retVal,lck);
+    }
+    
     removesEnEspera--;
     removesRealizados++;
     return retVal;
@@ -60,20 +168,18 @@ Tupla Linda::RdN(Tupla t) {
     bool encontrado=false;
     Tupla retVal(sz);
     //Mientras no ha encontrado una tupla que encaje
-    while (!encontrado){
-        //Se recorre toda la lista de tuplas
-        for (std::list<Tupla>::iterator it = tuplas[sz].begin();
-            (!encontrado) && it != tuplas[sz].end(); ++it){
+    //Se recorre toda la lista de tuplas
+    for (std::list<Tupla>::iterator it = tuplas[sz].begin();
+        (!encontrado) && it != tuplas[sz].end(); ++it){
 
-            if (it->match(t)){
-                retVal.copyFrom(*it);
-                encontrado=true;
-            }
+        if (it->match(t)){
+            retVal.copyFrom(*it);
+            encontrado=true;
         }
-        //Si no ha encontrado una tupla que le satisfazca, se duerme
-        if (!encontrado) {
-            espera[sz].wait(lck);
-        }
+    }
+    //Si no ha encontrado una tupla que le satisfazca, se duerme
+    if (!encontrado) {
+        esperarTupla(RdNcode,t,retVal,lck);
     }
     lecturasEnEspera--;
     lecturasRealizadas++;
@@ -89,37 +195,41 @@ list<Tupla> Linda::RNM(Tupla t1, Tupla t2){
 	retVal.empty();
 
 	bool encontrados = false;
-	while(!encontrados){
-		std::list<Tupla>::iterator it1 = tuplas[sz].begin();	
-		std::list<Tupla>::iterator it2 = tuplas[sz].begin();
-		it2++;
+	
+    std::list<Tupla>::iterator it1 = tuplas[sz].begin();	
+    std::list<Tupla>::iterator it2 = tuplas[sz].begin();
+    it2++;
+    
+    Tupla retVal1(sz);
+    Tupla retVal2(sz);
+
+    while(!encontrados && it1 != tuplas[sz].end()){
+        while(!encontrados && it2 != tuplas[sz].end()){
+            if(matchMultiple(t1,t2,*it1,*it2)){
+                retVal1.copyFrom(*it1);
+                retVal2.copyFrom(*it2);
+                retVal.push_back(retVal1);
+                retVal.push_back(retVal2);
+                encontrados = true;
+                tuplas[sz].erase(it1);
+                tuplas[sz].erase(it2);
+            }
+            else{
+                //cout << "Not matched" << endl;
+            }	
+            it2++;
+        }
+        it1++;
+        it2 = it1++;
+    }
+        
+
+    if(!encontrados){
+        esperarTupla(RN_2code,t1,t2,retVal1,retVal2,lck);
+        retVal.push_back(retVal1);
+        retVal.push_back(retVal2);
+    }
 		
-		Tupla retVal1(sz);
-		Tupla retVal2(sz);
-
-		while(!encontrados && it1 != tuplas[sz].end()){
-			while(!encontrados && it2 != tuplas[sz].end()){
-				if(matchMultiple(t1,t2,*it1,*it2)){
-					retVal1.copyFrom(*it1);
-					retVal2.copyFrom(*it2);
-					retVal.push_back(retVal1);
-					retVal.push_back(retVal2);
-					encontrados = true;
-					tuplas[sz].erase(it1);
-					tuplas[sz].erase(it2);
-				}
-				it2++;
-			}
-			it1++;
-			it2 = it1++;
-		}
-		 
-
-		if(!encontrados){
-            cout << "Not matched" << endl;
-			espera[sz].wait(lck);
-		}
-	}	
 
 	removesEnEspera -= 2;
     removesRealizados += 2;
@@ -135,39 +245,45 @@ list<Tupla> Linda::RdNM(Tupla t1, Tupla t2){
 	retVal.empty();
 
 	bool encontrados = false;
-	while(!encontrados){
-		std::list<Tupla>::iterator it1 = tuplas[sz].begin();	
-		std::list<Tupla>::iterator it2 = tuplas[sz].begin();
-		it2++;
-		
-		Tupla retVal1(sz);
-		Tupla retVal2(sz);
+    std::list<Tupla>::iterator it1 = tuplas[sz].begin();	
+    std::list<Tupla>::iterator it2 = tuplas[sz].begin();
+    it2++;
+    
+    Tupla retVal1(sz);
+    Tupla retVal2(sz);
 
+    
+    while(!encontrados && it1 != tuplas[sz].end()){
+        while(!encontrados && it2 != tuplas[sz].end()){
+            if(matchMultiple(t1,t2,*it1,*it2)){
+                retVal1.copyFrom(*it1);
+                retVal2.copyFrom(*it2);
+                retVal.push_back(retVal1);
+                retVal.push_back(retVal2);
+                encontrados = true;
+            }
+            else{
+                //cout << "Not matched" << endl;
+            }	
+            it2++;
+        }
+        it1++;
+        it2 = it1++;
+    }
+        
 
-		while(!encontrados && it1 != tuplas[sz].end()){
-			while(!encontrados && it2 != tuplas[sz].end()){
-				if(matchMultiple(t1,t2,*it1,*it2)){
-					retVal1.copyFrom(*it1);
-					retVal2.copyFrom(*it2);
-					retVal.push_back(retVal1);
-					retVal.push_back(retVal2);
-					encontrados = true;
-				}
-				it2++;
-			}
-			it1++;
-			it2 = it1++;
-		}
-		 
+    if(!encontrados){
+        esperarTupla(RdN_2code,t1,t2,retVal1,retVal2,lck);
+        retVal.push_back(retVal1);
+        retVal.push_back(retVal2);
+    }
 
-		if(!encontrados){
-            cout << "Not matched" << endl;
-			espera[sz].wait(lck);
-		}
-	}
+	
 
 	lecturasEnEspera -= 2;
     lecturasRealizadas += 2;
+
+    //cout<<"RdN_2 "<< retVal.front().to_string()<<retVal.back().to_string()<<endl;
 	return retVal;
 }
 
@@ -253,3 +369,26 @@ void Linda::GeneralInfo(int& nTuplas,int& RdNEnEspera,int& RNenEpera,
         RNrealizados=removesRealizados;
         PNrealizadas=escriturasRealizadas;
     }
+
+/* FUNCION DE BACKUP tupla esperada solo para operaciones simples
+bool Linda::tuplaEsperada(const Tupla& t){
+    int sz=t.size();
+    for (std::list<PuntoEspera*>::iterator it = puntosDeEspera[sz].begin();
+        it != puntosDeEspera[sz].end(); ++it){
+        int op=(*it)->opcode;
+        
+        if (t.match((*it)->buscando)){
+                
+            cout << "MATCH "<<t.to_string()<<endl;
+            (*it)->encontrada.copyFrom(t);
+            (*it)->despertar->notify_one();
+            it=puntosDeEspera[sz].erase(it);
+            
+            if(op==RNcode){
+                return true;
+            }
+        }
+
+    }
+    return false;
+}*/
