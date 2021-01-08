@@ -108,9 +108,6 @@ list<Tupla> Linda::RNM(Tupla t1, Tupla t2){
 					tuplas[sz].erase(it1);
 					tuplas[sz].erase(it2);
 				}
-				else{
-					cout << "Not matched" << endl;
-				}	
 				it2++;
 			}
 			it1++;
@@ -119,6 +116,7 @@ list<Tupla> Linda::RNM(Tupla t1, Tupla t2){
 		 
 
 		if(!encontrados){
+            cout << "Not matched" << endl;
 			espera[sz].wait(lck);
 		}
 	}	
@@ -155,9 +153,6 @@ list<Tupla> Linda::RdNM(Tupla t1, Tupla t2){
 					retVal.push_back(retVal2);
 					encontrados = true;
 				}
-				else{
-					cout << "Not matched" << endl;
-				}	
 				it2++;
 			}
 			it1++;
@@ -166,6 +161,7 @@ list<Tupla> Linda::RdNM(Tupla t1, Tupla t2){
 		 
 
 		if(!encontrados){
+            cout << "Not matched" << endl;
 			espera[sz].wait(lck);
 		}
 	}
