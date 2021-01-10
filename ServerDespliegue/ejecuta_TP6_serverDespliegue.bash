@@ -10,13 +10,13 @@
 MAKE_FILE=Makefile_TP6_serverDespliegue
 EJECUTABLE=serverDespliegue
 
-PuertoDespliegue=50000
+PuertoDespliegue=2200
 IPserver1=localhost
 IPserver2=localhost
 IPserver3=localhost
-Puertoserver1=50001
-Puertoserver2=50002
-Puertoserver3=50003
+Puertoserver1=32060
+Puertoserver2=32059
+Puertoserver3=32058
 
 
 echo "compliando servidor..."
