@@ -15,6 +15,7 @@ CC=g++
 CLIENT=Cliente
 BUSCADOR=Buscador
 PUBLICADOR=Publicador
+INICIADOR=Iniciador
 DRIVER_DIR=../LindaDriver
 DRIVER=${DRIVER_DIR}/LindaDriver
 TUPLA_DIR=../Tupla
@@ -25,7 +26,7 @@ SOCKET=${SOCKET_DIR}/Socket
 CPPFLAGS=-I. -I${DRIVER_DIR} -I${TUPLA_DIR} -I${SOCKET_DIR} -O2 -std=c++11 -lsockets # Flags compilacion
 LDFLAGS=-pthread # Flags linkado threads
 
-all: ${CLIENT} ${BUSCADOR}
+all: ${CLIENT} ${BUSCADOR} ${PUBLICADOR} ${INICIADOR}
 #----------------------------------------------------------------------------
 #Para gestionar opciones de compilación según la máquina: hendrix tiene sus manías
 #Descomentar la siguiente línea para compilar en hendrix
@@ -49,6 +50,24 @@ ${BUSCADOR}.o: ${BUSCADOR}.cpp
 ${BUSCADOR}: ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${BUSCADOR}.o  
 	${CC} ${LDFLAGS} ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${BUSCADOR}.o -o ${BUSCADOR} ${SOCKETSFLAGS}
 #-----------------------------------------------------------
+# PUBLICADOR
+# Compilacion
+${PUBLICADOR}.o: ${PUBLICADOR}.cpp
+	${CC} -c ${CPPFLAGS} ${PUBLICADOR}.cpp
+
+# Linkado
+${PUBLICADOR}: ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${PUBLICADOR}.o  
+	${CC} ${LDFLAGS} ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${PUBLICADOR}.o -o ${PUBLICADOR} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
+# INICIADOR
+# Compilacion
+${INICIADOR}.o: ${INICIADOR}.cpp
+	${CC} -c ${CPPFLAGS} ${INICIADOR}.cpp
+
+# Linkado
+${INICIADOR}: ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${INICIADOR}.o  
+	${CC} ${LDFLAGS} ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${INICIADOR}.o -o ${INICIADOR} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
 # TUPLA
 # Compilacion libreria Tupla
 ${TUPLA}.o: ${TUPLA}.hpp ${TUPLA}.cpp
@@ -67,4 +86,9 @@ ${DRIVER}.o: ${DRIVER}.hpp ${DRIVER}.cpp
 # LIMPIEZA
 clean:
 	$(RM) ${DRIVER}.o
+	$(RM) ${TUPLA}.o
+	$(RM) ${SOCKET}.o
 	$(RM) ${CLIENT} ${CLIENT}.o
+	$(RM) ${PUBLICADOR} ${PUBLICADOR}.o
+	$(RM) ${BUSCADOR} ${BUSCADOR}.o
+	$(RM) ${INICIADOR} ${INICIADOR}.o
