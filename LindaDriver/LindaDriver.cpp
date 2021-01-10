@@ -84,10 +84,6 @@ void LindaDriver::obtenerServidores(const string dir, const int puerto, string& 
     pos = buffer.find(":");
     dir_3 = buffer.substr(0,pos);
     puerto_3 = stoi(buffer.substr(pos+1,buffer.size()));
-
-    cout << dir_1 << " " << to_string(puerto_1) << endl;
-    cout << dir_2 << " " << to_string(puerto_2) << endl;
-    cout << dir_3 << " " << to_string(puerto_3) << endl;
 }
 
 // Iniciar la comunicacion con los servidores linda
@@ -187,11 +183,8 @@ void LindaDriver::pruebaConexion() {
 
     // Recibir respuesta del servidor
     read_bytes = server[0]->Recv(socket_fd[0], buffer, MESSAGE_SIZE);
-    cout << buffer << endl;
     read_bytes = server[1]->Recv(socket_fd[1], buffer, MESSAGE_SIZE);
-    cout << buffer << endl;
     read_bytes = server[2]->Recv(socket_fd[2], buffer, MESSAGE_SIZE);
-    cout << buffer << endl;
 }
 
 //PostNote
@@ -232,11 +225,7 @@ void LindaDriver::PN(const Tupla t) {
             server[index]->Close(socket_fd[index]);
             exit(1);
         }
-        else {
-            cout << buffer + ": " + tupla + "\n";
-        }
-
-    } else cout << "La tupla a enviar no es valida" << endl;
+    }
 }
 
 // Pre: "p" y "t" tienen el mismo tamaño
@@ -273,9 +262,8 @@ void LindaDriver::RN(const Tupla p, Tupla& t) {
         // Convertir respuesta en tupla
         t.copyFrom(Tupla(p.size()));//establece el tamaño de la tupla t
         t.from_string(buffer);
-        cout << "RN CORRECTO " << endl;
 
-    } else cout << "La tupla a enviar no es valida" << endl;
+    }
 }
 
 // Pre: "p1" y "t1" tienen el mismo tamaño
@@ -317,10 +305,7 @@ void LindaDriver::RN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2) {
         t2.copyFrom(Tupla(p2.size()));//establece el tamaño de la tupla t
         t1.from_string(buffer.substr(0,pos));
         t2.from_string(buffer.substr(pos,buffer.size()));
-        cout << "RN_2 CORRECTO "<< endl;
-
-    }else if( size1 != size2 ) cout << "Las tuplas a enviar no tienen el mismo tamanyo" << endl;
-    else cout << "El tamnyo de las tuplas a enviar no es valido" << endl;
+    }
 }
 
 // Pre: "p" y "t" tienen el mismo tamaño
@@ -357,8 +342,7 @@ void LindaDriver::RdN(const Tupla p, Tupla& t) {
         // Convertir respuesta en tupla
         t.copyFrom(Tupla(p.size()));//establece el tamaño de la tupla t
         t.from_string(buffer);        
-        cout << "RdN CORRECTO " << endl;
-    }else cout << "La tupla a enviar no es valida" << endl;
+    }
 }
 
 // Pre: "p1" y "t1" tienen el mismo tamaño
@@ -399,8 +383,5 @@ void LindaDriver::RdN_2(const Tupla p1, const Tupla p2, Tupla& t1, Tupla& t2) {
         t2.copyFrom(Tupla(p2.size()));//establece el tamaño de la tupla t
         t1.from_string(buffer.substr(0,pos));
         t2.from_string(buffer.substr(pos,buffer.size()));
-        cout << "RdN_2 CORRECTO "<< endl;
-
-    }else if( size1 != size2 ) cout << "Las tuplas a enviar no tienen el mismo tamanyo" << endl;
-    else cout << "El tamnyo de las tuplas a enviar no es valido" << endl;
+    }
 }
