@@ -11,7 +11,7 @@ MAKE_FILE=Makefile_TP6_Cliente
 EJECUTABLE=Cliente
 
 IPDESPLIEGUE=localhost
-PUERTODESPLIEGUE=50000
+PUERTODESPLIEGUE=2200
 
 
 echo "------------------------------------------"
