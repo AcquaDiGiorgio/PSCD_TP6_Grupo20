@@ -10,19 +10,10 @@ const int MESSAGE_SIZE = 4001; //mensajes de no más 4000 caracteres
 const int NLindaServers =3;
 const int FrecuenciaMonitorizacion=5;
 
-/*void realizarDespliegue(const string address, const int port, string ip[],int puerto[]) {
-    //ip[0]= "localhost"; puerto[0]= 20001;
-    //ip[1] = "localhost";puerto[1]= 20002;
-    //ip[2] = "localhost";puerto[2]= 20003;
-
-}*/
-
 void obtenerServidores(const string dir, const int puerto, string& dir_1, string& dir_2,
                                     string& dir_3, int& puerto_1, int& puerto_2, int& puerto_3)
 {
 
-    /*dir_1 = "localdir"; dir_2 = "localdir"; dir_3 = "localdir";
-    puerto_1 = 20000; puerto_2 = 20001; puerto_3 = 20002;*/
     // Creación del socket con el que se llevará a cabo
     // la comunicación con el servidor.
     Socket chan(dir, puerto);
@@ -113,7 +104,6 @@ int main(int argc, char *argv[]) {
     string servidor[NLindaServers];//Hace falta un socket para cada servidor linda
     Socket chan[NLindaServers];
     int puerto[NLindaServers];
-    //realizarDespliegue(SERVER_ADDRESS,SERVER_PORT,servidor,puerto);
     obtenerServidores(SERVER_ADDRESS, SERVER_PORT, ref(servidor[0]), ref(servidor[1]), ref(servidor[2]),
             ref(puerto[0]), ref(puerto[1]), ref(puerto[2]));
     
