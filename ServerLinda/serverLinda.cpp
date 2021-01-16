@@ -9,43 +9,26 @@
 #include <thread>
 #include <string>
 #include <cstdlib>
-#include "Socket.hpp"
-#include "Tupla.hpp"
-#include "monitorLinda.hpp"
+#include <Socket.hpp>
+#include <Tupla.hpp>
+#include <monitorLinda.hpp>
 
 using namespace std;
 
-const int N = 10000;  // TODO: Clientes simultaneos y/o totales usando el servidor
 
-bool connectionError(Socket soc, int client_fd, int bytes){
-    bool retVal = false;
-    
-    if(bytes == 0){
-        cerr << "Error al enviar/recibir datos\n";
-
-        soc.Close(client_fd);
-        retVal = true;
-
-    }else if(bytes == -1){
-        cout << "Error grave en el sistema, terminando..." << endl;
-        exit(1);
-
-    }
-    
-    return retVal;
-}
-
-void servCliente (Socket &soc, int client_fd, Linda &monitor, int& clientesConectados) {
+void servCliente (Socket &soc, int client_fd, Linda &monitor,int& clientesConectados) {
     int length = 100;
     string buffer = "";
 
     int rcv_bytes = soc.Recv(client_fd,buffer,length);
-    if(connectionError(soc, client_fd, rcv_bytes)) {
+    if (rcv_bytes == -1) {  
+        cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
+        // Cerramos los sockets
+        soc.Close(client_fd);
         clientesConectados--;
-        return;
+        exit(1);
     }
-    
-    if (buffer != "INICIO SESION") {  // TODO: Gestion de errores
+    if (buffer != "INICIO SESION") { 
         cerr << "Peticion incorrecta: recibido \"" + buffer +
             "\" cuando se esperaba \"INICIO SESION\"\n";
         soc.Close(client_fd);
@@ -54,19 +37,24 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor, int& clientesConec
     }
 
     int send_bytes = soc.Send(client_fd, "SESION ACEPTADA");
-    if(connectionError(soc, client_fd, send_bytes)) {
+    if(send_bytes == -1) { 
+        cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
+        // Cerramos los sockets
+        soc.Close(client_fd);
         clientesConectados--;
-        return;
+        exit(1);
     }
 
     bool seguir = true;
     while (seguir) {
         rcv_bytes = soc.Recv(client_fd,buffer,length);
-        if(connectionError(soc, client_fd, rcv_bytes)) {
+        if (rcv_bytes == -1) {  
+            cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
+            // Cerramos los sockets
+            soc.Close(client_fd);
             clientesConectados--;
-            return;
+            exit(1);
         }
-
         if (buffer == "FIN SESION") {  // TODO: Cierre ordinario
             seguir = false;
             soc.Close(client_fd);
@@ -75,7 +63,6 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor, int& clientesConec
 
         else {
             // Separamos el mensaje y realizamos la operacion
-            // TODO: Gestion de errores
             char* aux = new char[buffer.length()+1];
             strcpy(aux, buffer.c_str());
 			string envio, e1, e2;
@@ -83,13 +70,11 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor, int& clientesConec
             int size = atoi(strtok(NULL, ":"));
             Tupla entrada1(size);
             e1 = strtok(NULL, ":");
-			//cout << e1 << endl;
             entrada1.from_string(e1);
             if (tok == "PN") {
                 monitor.PN(entrada1);
                 envio = "POST NOTE CORRECTO";
             }
-
             else if (tok == "RN") {
                 Tupla salida = monitor.RN(entrada1);
                 envio = salida.to_string();
@@ -104,15 +89,11 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor, int& clientesConec
                 monitor.GeneralInfo(nTuplas,RdNEnEspera,RNenEspera,RdNrealizadas,RNrealizados,PNrealizadas);
                 envio= to_string(clientesConectados) + ':' + to_string(nTuplas) + ':'+ to_string(RdNEnEspera) +':'
                 + to_string(RNenEspera) + ':' + to_string(RdNrealizadas)+ ':' +to_string(RNrealizados) + ':' + to_string(PNrealizadas) + ':';
-                cout << envio;
             }
-
 			else{
 				Tupla entrada2(size);
 				e2 = strtok(NULL, ":");
-				//cout << e2 << endl;
 				entrada2.from_string(e2);
-
 				if (tok == "RN_2") {
 					list<Tupla> salida = monitor.RNM(entrada1,entrada2);
 					envio = salida.front().to_string() + salida.back().to_string();				
@@ -123,20 +104,23 @@ void servCliente (Socket &soc, int client_fd, Linda &monitor, int& clientesConec
 					envio = salida.front().to_string() + salida.back().to_string();
 				}
 
-            	else {  // TODO: Gestion de errores
+            	else {  
                 	cerr << "Peticion incorrecta: recibido \"" + buffer +
                 	    "\" cuando se esperaba \"MON\", \"PN\", \"RN\", \"RdN\", \"RN2\" o \"RdN2\" \n";
                 	soc.Close(client_fd);
 					clientesConectados--;
-                	return;
+                	exit(1);
             	}
 			}	
 
             
             int send_bytes = soc.Send(client_fd, envio);
-            if(connectionError(soc, client_fd, send_bytes)) {
+            if(send_bytes == -1) {  
+                cerr << "Error al enviar datos: " + string(strerror(errno)) + "\n";
+                // Cerramos los sockets
+                soc.Close(client_fd);
                 clientesConectados--;
-                return;
+                exit(1);
             }
         }
     }
@@ -151,8 +135,7 @@ int main (int argc, char *argv[]) {
     }
 
     int SERVER_PORT = atoi(argv[1]);
-    thread cliente[N];
-    int client_fd[N];
+
     Linda monitor;
 
     // Creación del socket con el que se llevará a cabo
@@ -161,40 +144,38 @@ int main (int argc, char *argv[]) {
 
     // Bind
     int socket_fd = chan.Bind();
-    if (socket_fd == -1) {  // TODO: Gestion de errores
+    if (socket_fd == -1) {  
         cerr << "Error en el bind: " + string(strerror(errno)) + "\n";
         exit(1);
     }
 
     // Listen
-    int error_code = chan.Listen(N);
-    if (error_code == -1) {  // TODO: Gestion de errores
+    int error_code = chan.Listen(1000);//Límite arbitrario de conexiones simultaneas
+    if (error_code == -1) {  
         cerr << "Error en el listen: " + string(strerror(errno)) + "\n";
         // Cerramos el socket
         chan.Close(socket_fd);
         exit(1);
     }
 
-    for (int i = 0; i < N; i++) {  // TODO: Cientes a aceptar?
+    int conexiones=0;
+
+    while (true) { 
         // Accept
-        int conexiones=0;
 
-        client_fd[i] = chan.Accept();
+        int client_fd = chan.Accept();
 
-        if(client_fd[i] == -1) {  // TODO: Gestion de errores
+        if(client_fd == -1) { 
             cerr << "Error en el accept: " + string(strerror(errno)) + "\n";
             // Cerramos el socket
             chan.Close(socket_fd);
             exit(1);
         }
         conexiones++;
-        cliente[i] = thread(&servCliente, ref(chan), client_fd[i], ref(monitor),ref(conexiones));
+        thread cliente= thread(&servCliente, ref(chan), client_fd, ref(monitor),ref(conexiones));
+        cliente.detach();
     }
 
-    // ¿Qué pasa si algún thread acaba inesperadamente?
-    for (int i=0; i<N; i++) {
-        cliente[i].join();
-    }
 
     // Cerramos el socket del servidor
     error_code = chan.Close(socket_fd);
