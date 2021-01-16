@@ -14,8 +14,6 @@
 
 using namespace std;
 
-const int N = 5;  // TODO: Clientes en cola usando el servidor
-
 
 
 void servCliente(Socket& chan,int client_fd, string direcciones){
@@ -25,7 +23,7 @@ void servCliente(Socket& chan,int client_fd, string direcciones){
 	cout << "Conexion establecida con cliente " <<  client_fd << endl;
 	while(sigue){
 		int rcv_bytes = chan.Recv(client_fd,buffer,1000);
-		if (rcv_bytes == -1) {  // TODO: Gestion de errores
+		if (rcv_bytes == -1) {
 		    cerr << "Error al recibir datos: " + string(strerror(errno)) + "\n";
 		    // Cerramos los sockets
 		    chan.Close(client_fd);
@@ -72,11 +70,6 @@ int main (int argc, char* argv[]) {
     }
     
     
-    int client_fd[N];
-    
-    thread cliente[N];
-    
-
     // Creación del socket con el que se llevará a cabo
     // la comunicación con el servidor.
     Socket chan(SERVER_PORT);
@@ -97,9 +90,9 @@ int main (int argc, char* argv[]) {
         exit(1);
     }
     
-    for(int i = 0; true; i++){  // TODO: Cientes a aceptar?
+    while (true) {
         // Accept
-        client_fd[i] = chan.Accept();
+        int client_fd = chan.Accept();
         cout << "Aceptado cliente" << endl;
         if (client_fd[i] == -1) {
             cerr << "Error en el accept: " + string(strerror(errno)) + "\n";
@@ -107,12 +100,10 @@ int main (int argc, char* argv[]) {
             chan.Close(socket_fd);
             exit(1);
         }
-        cliente[i] = thread(&servCliente, ref(chan), client_fd[i], direcciones);
+        thread cliente = thread(&servCliente, ref(chan), client_fd, direcciones);
+        cliente.detach();
     }
-    
-    for(int i = 0; i < N; i++){
-    	cliente[i].join();
-    }
+
     // Cerramos el socket del servidor
     error_code = chan.Close(socket_fd);
     if (error_code == -1) {
