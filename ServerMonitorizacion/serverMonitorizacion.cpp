@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
         for (int i=0;i<NLindaServers;i++){
             send_bytes = chan[i].Send(socket_fd[i], "MON:1:[1]");//La petición tiene esta forma, porque el servidor linda tiene que leer una tupla
             if(send_bytes == -1) {
-                cerr << "Error al enviar datos: " << strerror(errno) << endl;
+                cerr << "Error al enviar datos al servidor " << i <<": " << strerror(errno) << endl;
                 // Cerramos el socket
                 chan[i].Close(socket_fd[i]);
                 exit(1);
@@ -188,12 +188,12 @@ int main(int argc, char *argv[]) {
             // Recibir respuesta del servidor
             read_bytes = chan[i].Recv(socket_fd[i], buffer, MESSAGE_SIZE);
             if(read_bytes == -1) {
-                cerr << "Error al recibir datos: " << strerror(errno) << endl;
+                cerr << "Error al recibir datos del servidor " << i <<": " << strerror(errno) << endl;
                 // Cerramos el socket
                 chan[i].Close(socket_fd[i]);
                 exit(1);
             }
-
+            //Extraemos los datos recibidos
             char* aux = new char[buffer.length()+1];
             strcpy(aux, buffer.c_str());
             clientesConectados += atoi(strtok(aux, ":"));
@@ -228,7 +228,7 @@ int main(int argc, char *argv[]) {
     for (int i=0;i<NLindaServers;i++){
         send_bytes = chan[i].Send(socket_fd[i], mensaje);
         if(send_bytes == -1) {
-            cerr << "Error al enviar datos: " << strerror(errno) << endl;
+            cerr << "Error al enviar "<< mensaje << "al servidor"<< i<<":" << strerror(errno) << endl;
             // Cerramos el socket
             chan[i].Close(socket_fd[i]);
             exit(1);
@@ -237,7 +237,7 @@ int main(int argc, char *argv[]) {
         // Cerramos el socket
         int error_code = chan[i].Close(socket_fd[i]);
         if(error_code == -1) {
-            cerr << "Error cerrando el socket: " << strerror(errno) << endl;
+            cerr << "Error cerrando el socket "<< i <<":"<< strerror(errno) << endl;
         }
     }
     // Despedida
