@@ -82,7 +82,7 @@ int main (int argc, char* argv[]) {
     }
 
     // Listen
-    int error_code = chan.Listen(N);
+    int error_code = chan.Listen(1000);
     if (error_code == -1) {
         cerr << "Error en el listen: " + string(strerror(errno)) + "\n";
         // Cerramos el socket
@@ -94,7 +94,7 @@ int main (int argc, char* argv[]) {
         // Accept
         int client_fd = chan.Accept();
         cout << "Aceptado cliente" << endl;
-        if (client_fd[i] == -1) {
+        if (client_fd == -1) {
             cerr << "Error en el accept: " + string(strerror(errno)) + "\n";
             // Cerramos el socket
             chan.Close(socket_fd);
