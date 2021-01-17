@@ -1,0 +1,96 @@
+#*****************************************************************
+# File:   Makefile_p5_e1_e2
+# Author: PSCD-Unizar
+# Date:   octubre 2020
+# Coms:   Ejemplo de Makefile para la práctica 5 de PSCD
+#         "make -f Makefile_p5_e1_e2" construye todos los ejecutables
+#         "make -f Makefile_p5_e1_e2 Cliente" construye "Cliente"
+#         ....
+#         Es necesario descomentar la línea 28 para poder compilar en hendrix
+#*****************************************************************
+
+#---------------------------------------------------------
+CC=g++
+
+CLIENT=Cliente
+BUSCADOR=Buscador
+PUBLICADOR=Publicador
+INICIADOR=Iniciador
+CARGA=clienteCarga
+DRIVER_DIR=../LindaDriver
+DRIVER=${DRIVER_DIR}/LindaDriver
+TUPLA_DIR=../Tupla
+TUPLA=${TUPLA_DIR}/Tupla
+SOCKET_DIR=../Socket
+SOCKET=${SOCKET_DIR}/Socket
+
+CPPFLAGS=-I. -I${DRIVER_DIR} -I${TUPLA_DIR} -I${SOCKET_DIR} -O2 -std=c++11 -lsockets # Flags compilacion
+LDFLAGS=-pthread # Flags linkado threads
+
+all: ${BUSCADOR} ${PUBLICADOR} ${INICIADOR} ${CARGA}
+#----------------------------------------------------------------------------
+#Para gestionar opciones de compilación según la máquina: hendrix tiene sus manías
+#Descomentar la siguiente línea para compilar en hendrix
+#SOCKETSFLAGS=-lsocket -lnsl
+#-----------------------------------------------------------
+# BUSCADOR
+# Compilacion
+${BUSCADOR}.o: ${BUSCADOR}.cpp
+	${CC} -c ${CPPFLAGS} ${BUSCADOR}.cpp
+
+# Linkado
+${BUSCADOR}: ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${BUSCADOR}.o  
+	${CC} ${LDFLAGS} ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${BUSCADOR}.o -o ${BUSCADOR} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
+# PUBLICADOR
+# Compilacion
+${PUBLICADOR}.o: ${PUBLICADOR}.cpp
+	${CC} -c ${CPPFLAGS} ${PUBLICADOR}.cpp
+
+# Linkado
+${PUBLICADOR}: ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${PUBLICADOR}.o  
+	${CC} ${LDFLAGS} ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${PUBLICADOR}.o -o ${PUBLICADOR} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
+# INICIADOR
+# Compilacion
+${INICIADOR}.o: ${INICIADOR}.cpp
+	${CC} -c ${CPPFLAGS} ${INICIADOR}.cpp
+
+# Linkado
+${INICIADOR}: ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${INICIADOR}.o  
+	${CC} ${LDFLAGS} ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${INICIADOR}.o -o ${INICIADOR} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
+# CARGA
+# Compilacion
+${CARGA}.o: ${CARGA}.cpp
+	${CC} -c ${CPPFLAGS} ${CARGA}.cpp
+
+# Linkado
+${CARGA}: ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${CARGA}.o  
+	${CC} ${LDFLAGS} ${DRIVER}.o ${TUPLA}.o ${SOCKET}.o ${CARGA}.o -o ${CARGA} ${SOCKETSFLAGS}
+#-----------------------------------------------------------
+# TUPLA
+# Compilacion libreria Tupla
+${TUPLA}.o: ${TUPLA}.hpp ${TUPLA}.cpp
+	${CC} -c ${CPPFLAGS} ${TUPLA}.cpp -o ${TUPLA}.o
+#-----------------------------------------------------------	
+# SOCKETS
+# Compilacion libreria de Sockets
+${SOCKET}.o: ${SOCKET}.hpp ${SOCKET}.cpp
+	${CC} -c ${CPPFLAGS} ${SOCKET}.cpp -o ${SOCKET}.o
+#-----------------------------------------------------------	
+# DRIVER
+# Compilacion libreria de Sockets
+${DRIVER}.o: ${DRIVER}.hpp ${DRIVER}.cpp 
+	${CC} -c ${CPPFLAGS} ${DRIVER}.cpp -o ${DRIVER}.o
+#-----------------------------------------------------------
+# LIMPIEZA
+clean:
+	$(RM) ${DRIVER}.o
+	$(RM) ${TUPLA}.o
+	$(RM) ${SOCKET}.o
+	$(RM) ${CLIENT} ${CLIENT}.o
+	$(RM) ${PUBLICADOR} ${PUBLICADOR}.o
+	$(RM) ${BUSCADOR} ${BUSCADOR}.o
+	$(RM) ${INICIADOR} ${INICIADOR}.o
+	$(RM) ${CARGA} ${CARGA}.o
