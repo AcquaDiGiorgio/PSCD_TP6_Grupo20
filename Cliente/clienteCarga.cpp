@@ -17,6 +17,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
+#include <ctime> 
 
 #include "LindaDriver.hpp"
 #include "Tupla.hpp"
@@ -32,6 +33,8 @@ void errorInvocacion() {
 }
 //-----------------------------------------------------
 int main(int argc, char* argv[]) {
+    time_t instanteInicial, instanteFinal;
+    instanteInicial = time(0);
     const int MAX_LENGTH = 6; //máx longitud tuplas
     //faltan argumentos en la invocación?
     if (argc < 4 ) {
@@ -99,6 +102,8 @@ int main(int argc, char* argv[]) {
         delete tuplas[i];
     }
     //-----------------------------------------------------
+    instanteFinal = time(0);
+    cout << "Execution time: " << instanteFinal - instanteInicial << " s" << endl;
 
     return 0;
 }
